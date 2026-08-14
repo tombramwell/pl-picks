@@ -5,8 +5,8 @@ import Navbar from '@/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Just Fontaine World Cup Goal Scorer Challenge',
-  description: 'Pick a player, earn points if they score, enjoy an otherwise inevitably terrible tournament. ',
+  title: 'PL Picks',
+  description: 'A longer, more tortuous version of the Just Fontaine Challenge. ',
 };
 
 
