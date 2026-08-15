@@ -29,6 +29,7 @@ export default async function UserBreakdownPage(props) {
     };
   }).sort((a, b) => a.gameweek - b.gameweek);
 
+  const totalPoints = breakdown.reduce((sum, p) => sum + (p.points || 0), 0);
   const totalGoals = breakdown.reduce((sum, p) => sum + (p.goalsScored || 0), 0);
 
   return (
@@ -45,8 +46,8 @@ export default async function UserBreakdownPage(props) {
         </div>
         
         <div className="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl text-center shadow-sm">
-          <span className="block text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Goals</span>
-          <span className="text-2xl font-extrabold text-indigo-700">{totalGoals} ⚽</span>
+          <span className="block text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Points</span>
+          <span className="text-2xl font-extrabold text-indigo-700">{totalPoints}</span>
         </div>
       </div>
 
@@ -80,22 +81,22 @@ export default async function UserBreakdownPage(props) {
                 </div>
               </div>
 
-              {/* Goal Outcome */}
-              <div className="shrink-0">
-                {!pick.isFinished ? (
-                  <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
-                    Pending
-                  </span>
-                ) : pick.goalsScored > 0 ? (
-                  <span className="bg-green-100 text-green-700 text-sm font-extrabold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap flex items-center gap-1">
-                    +{pick.goalsScored} ⚽
-                  </span>
-                ) : (
-                  <span className="bg-red-50 text-red-500 text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap">
-                    0 Goals
-                  </span>
-                )}
-              </div>
+{/* Goal Outcome */}
+                  <div className="shrink-0">
+                    {!pick.isFinished ? (
+                      <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
+                        Pending
+                      </span>
+                    ) : pick.goalsScored > 0 ? (
+                      <span className="bg-green-100 text-green-700 text-sm font-extrabold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap flex items-center gap-1">
+                        {pick.goalsScored} ⚽ ({pick.points} pts)
+                      </span>
+                    ) : (
+                      <span className="bg-red-50 text-red-500 text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap">
+                        0 pts
+                      </span>
+                    )}
+                  </div>
 
             </div>
           ))

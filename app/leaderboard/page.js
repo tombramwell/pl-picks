@@ -9,15 +9,16 @@ export default async function LeaderboardPage() {
   await dbConnect();
 
   // Aggregate total goals scored per user
-  const leaderboardData = await Pick.aggregate([
+const leaderboardData = await Pick.aggregate([
     {
       $group: {
         _id: "$userId",
         totalGoals: { $sum: "$goalsScored" },
+        totalPoints: { $sum: "$points" }, // <-- Add points sum
         totalPicksMade: { $sum: 1 }
       }
     },
-    { $sort: { totalGoals: -1, totalPicksMade: 1 } }
+    { $sort: { totalPoints: -1, totalGoals: -1 } } // <-- Sort by points first
   ]);
 
   const currentUserEmail = session?.user?.email;
@@ -47,7 +48,8 @@ export default async function LeaderboardPage() {
               <th className="py-4 px-6">Rank</th>
               <th className="py-4 px-6">Player</th>
               <th className="py-4 px-6 text-center">Picks</th>
-              <th className="py-4 px-6 text-right">Total Goals</th>
+              <th className="py-4 px-6 text-center">Goals</th>
+              <th className="py-4 px-6 text-right">Points</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">
@@ -65,7 +67,7 @@ export default async function LeaderboardPage() {
                     {rank === 1 && <span className="text-xl">🥇</span>}
                     {rank === 2 && <span className="text-xl">🥈</span>}
                     {rank === 3 && <span className="text-xl">🥉</span>}
-                    {rank > 3 && <span className="text-gray-500 font-mono">#{rank}</span>}
+                    {rank > 3 && <span className="text-gray-500 font-mono">{rank}.</span>}
                   </td>
 
                   {/* User Identifier */}
@@ -89,9 +91,11 @@ export default async function LeaderboardPage() {
                   </td>
 
                   {/* Total Goals */}
+                  <td className="py-4 px-6 text-center text-gray-500 font-mono">                      {row.totalGoals} 
+                  </td>
                   <td className="py-4 px-6 text-right">
                     <span className="text-base font-extrabold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">
-                      {row.totalGoals} 
+                      {row.totalPoints || 0} pts
                     </span>
                   </td>
                 </tr>
