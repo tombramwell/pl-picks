@@ -5,25 +5,55 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
   const [selectedPlayerId, setSelectedPlayerId] = useState(currentPick?.playerId || '');
   const [loading, setLoading] = useState(false);
   const [savedPick, setSavedPick] = useState(currentPick);
+  
+  // Mounted state prevents client/server hydration mismatches
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState(null);
 
-  // Keep state synced if props update from server
+  useEffect(() => {
+    setMounted(true);
+    setNow(new Date());
+
+    // Update time every minute
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Sync state with server props
   useEffect(() => {
     setSelectedPlayerId(currentPick?.playerId || '');
     setSavedPick(currentPick);
   }, [currentPick]);
 
-  // Check if kickoff has passed
-  const isLocked = new Date() >= new Date(match.kickoffTime);
+  // Kickoff calculation
+  const kickoffTime = new Date(match.kickoffTime);
+  const currentTime = now || new Date(match.kickoffTime); // Fallback during SSR
+  const diffMs = kickoffTime - currentTime;
+  const isLocked = mounted && diffMs <= 0;
+  
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const showCountdown = mounted && diffMs > 0 && diffMs <= sevenDaysMs;
+
+  // Format countdown string
+  let countdownString = "";
+  if (showCountdown) {
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) countdownString += `${days}d `;
+    if (hours > 0) countdownString += `${hours}h `;
+    countdownString += `${minutes}m`;
+  }
 
   // Sort players by squad number
   const sortedTeamA = [...teamAPlayers].sort((a, b) => (a.squadNumber || 99) - (b.squadNumber || 99));
   const sortedTeamB = [...teamBPlayers].sort((a, b) => (a.squadNumber || 99) - (b.squadNumber || 99));
   const allMatchPlayers = [...sortedTeamA, ...sortedTeamB];
 
-  // Has the user changed their selection from what is currently saved in DB?
   const isDirty = selectedPlayerId !== (savedPick?.playerId || '');
 
-  // Handle manual explicit save
+  // Save Pick Handler
   const handleSavePick = async () => {
     if (isLocked || !selectedPlayerId || !isDirty) return;
     
@@ -56,7 +86,7 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
     }
   };
 
-  // Roll the Dice: Randomly pick an available player without auto-saving immediately
+  // Roll the Dice Handler
   const handleRollDice = () => {
     if (isLocked || loading) return;
 
@@ -72,20 +102,24 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
     const randomIndex = Math.floor(Math.random() * availablePlayers.length);
     const randomPlayer = availablePlayers[randomIndex];
     
-    // Just updates the dropdown state - user clicks 'Save Pick' to finalize
     setSelectedPlayerId(randomPlayer._id);
   };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-3">
-      {/* Header: Date, Kickoff Status, & Dice Roll */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div suppressHydrationWarning className="text-sm font-semibold text-gray-700">
+        <div className="text-sm font-semibold text-gray-700">
           <span className="text-indigo-900 font-extrabold">{match.teamA}</span>
           <span className="text-gray-400 mx-2">vs</span>
           <span className="text-indigo-900 font-extrabold">{match.teamB}</span>
-          <span className="text-xs text-gray-500 font-normal block sm:inline sm:ml-3">
-            {new Date(match.kickoffTime).toLocaleString('en-GB', {
+          
+          {/* Direct suppressHydrationWarning placed on the date string itself */}
+          <span 
+            suppressHydrationWarning 
+            className="text-xs text-gray-500 font-normal block sm:inline sm:ml-3"
+          >
+            {kickoffTime.toLocaleString('en-GB', {
               weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
             })}
           </span>
@@ -97,25 +131,36 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
               onClick={handleRollDice}
               disabled={loading}
               title="Pick a random available goalscorer"
-              className="text-xs bg-amber-100 text-amber-800 font-bold px-3 py-1.5 rounded-lg hover:bg-amber-200 transition flex items-center gap-1 disabled:opacity-50"
+              className="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition flex items-center gap-1 disabled:opacity-50"
             >
-              🎲 Roll the Dice...
+              🎲 Roll the Dice
             </button>
           )}
 
-          {isLocked ? (
-            <span className="text-xs font-bold uppercase bg-red-100 text-red-700 px-2 py-1 rounded">
-              Locked
-            </span>
-          ) : (
-            <span className="text-xs font-bold uppercase bg-green-100 text-green-700 px-2 py-1 rounded">
-              Open
-            </span>
-          )}
+          {/* Dynamic Badge */}
+          <div>
+            {!mounted ? (
+              <span className="text-xs font-bold uppercase bg-gray-100 text-gray-500 px-2 py-1.5 rounded">
+                Open
+              </span>
+            ) : isLocked ? (
+              <span className="text-xs font-bold uppercase bg-red-100 text-red-700 px-2 py-1.5 rounded">
+                Locked
+              </span>
+            ) : showCountdown ? (
+              <span className="text-xs font-bold uppercase bg-amber-100 text-amber-800 px-2 py-1.5 rounded whitespace-nowrap">
+                Deadline: {countdownString.trim()}
+              </span>
+            ) : (
+              <span className="text-xs font-bold uppercase bg-green-100 text-green-700 px-2 py-1.5 rounded">
+                Open
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Selector + Save Button Container */}
+      {/* Selector + Save Button */}
       <div className="flex flex-col sm:flex-row gap-2">
         <select
           disabled={isLocked || loading}
@@ -148,7 +193,6 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
           </optgroup>
         </select>
 
-        {/* Save Button */}
         {!isLocked && (
           <button
             onClick={handleSavePick}
@@ -164,14 +208,14 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
         )}
       </div>
 
-      {/* Saved Pick Status Footer */}
+      {/* Saved Pick Footer */}
       {savedPick && (
-        <div className="text-xs text-indigo-700 bg-indigo-50 p-2 rounded-lg flex justify-between items-center">
+        <div className="text-xs text-indigo-700 bg-indigo-50 p-2.5 rounded-lg flex justify-between items-center border border-indigo-100 mt-2">
           <span>
-            Saved Selection: <strong>{savedPick.playerName}</strong> ({savedPick.playerTeam})
+            Saved selection: <strong className="ml-1">{savedPick.playerName}</strong> ({savedPick.playerTeam})
           </span>
           {savedPick.goalsScored > 0 && (
-            <span className="font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded">
+            <span className="font-extrabold text-green-700 bg-green-100 px-2 py-0.5 rounded shadow-sm">
               +{savedPick.goalsScored} ⚽
             </span>
           )}

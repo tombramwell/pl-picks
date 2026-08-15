@@ -69,15 +69,18 @@ export default async function LeaderboardPage() {
                   </td>
 
                   {/* User Identifier */}
-                  <td className="py-4 px-6 text-gray-900">
-                    <div>
+<td className="py-4 px-6 text-gray-900 font-medium">
+                    <Link 
+                      href={`/leaderboard/${encodeURIComponent(row._id)}`}
+                      className="hover:text-indigo-600 hover:underline flex items-center gap-2 transition"
+                    >
                       {row._id.split('@')[0]}
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full font-normal">
+                        <span className="text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full font-normal">
                           You
                         </span>
                       )}
-                    </div>
+                    </Link>
                   </td>
 
                   {/* Picks Made Count */}
