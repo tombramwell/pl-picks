@@ -1,75 +1,87 @@
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'How to Play | WC Challenge',
-};
-
 export default function RulesPage() {
   return (
-    <main className="max-w-3xl mx-auto p-4 md:p-8">
-      <header className="mb-8 border-b pb-4 flex justify-between items-end">
+    <main className="max-w-3xl mx-auto p-4 md:p-8 min-h-screen">
+      
+      {/* Header */}
+      <div className="bg-gradient-to-b from-barclays-blue to-barclays-dark text-white p-6 border-b-4 border-barclays-cyan mb-8 shadow-md flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-            How to Play
+          <h1 className="text-3xl font-black tracking-tighter uppercase italic">
+            How To <span className="text-barclays-cyan">Play</span>
           </h1>
-          <p className="text-gray-600 mt-2">It's a simple game, here's how to play. Good luck!</p>
         </div>
-        <Link href="/" className="text-blue-600 hover:underline font-medium">
-          &larr; Back to Dashboard
+        <Link href="/" className="text-xs font-bold uppercase tracking-widest text-barclays-cyan hover:text-white transition">
+          ◀ BACK 
         </Link>
-      </header>
+      </div>
 
-      <section className="space-y-8 bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-200">
+      {/* Rules Content */}
+      <div className="bg-white border-2 border-gray-300 shadow-lg p-6 space-y-8 text-barclays-dark">
         
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">What is the game?</h2>
-          <ul className="list-disc pl-5 text-gray-600 space-y-2">
-            <li>Choose <strong>one player</strong> to score a goal in each match of the 2026 World Cup.</li>
-            <li>You can submit your pick at any point up until the exact kickoff time. Once the match kicks off, your pick is locked in and cannot be changed - even if that player does not play.</li>
-            <li>If you fail to make a pick before kick-off, you score 0 points for that match.</li>
-          </ul>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Anything else to watch out for?</h2>
-          <ul className="list-disc pl-5 text-gray-600 space-y-2">
-            <li>Once you pick a player, <strong>you cannot pick them again for the rest of the tournament</strong>.</li>
-            <li>For example, if you pick Harry Kane in England's first group stage match - he's no longer an option for any future fixtures. Manage the superstars wisely.</li>
-          </ul>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">How do the points work?</h2>
-          <p className="text-gray-600 mb-4">
-            Every time a goal is scored by a player you have selected, points are earned based on the position of that player. In theory, the less likely it is for them to score, the more points you get if they do.
-            <br />In the knockout stages of the competition, goals in extra-time will be counted, but those scored in penalty shootouts will not.
+        <section>
+          <h2 className="text-xl font-black uppercase tracking-wide border-b-2 border-barclays-cyan pb-2 mb-4">Select a scorer - it's that simple</h2>
+          <p className="font-medium text-gray-700 leading-relaxed">
+            Choose <strong>one player</strong> to score a goal in every Premier League match. If your selected player scores, you earn points for your team.
           </p>
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-            <ul className="space-y-3 font-medium text-blue-900">
-              <li className="flex justify-between border-b border-blue-200 pb-2">
-                <span>Forward</span>
-                <span className="font-bold">1pt per goal</span>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-black uppercase tracking-wide border-b-2 border-barclays-cyan pb-2 mb-4">Oh okay, there's a slight complication</h2>
+          <p className="font-medium text-gray-700 leading-relaxed">
+            You do need to choose carefully. <strong>You can only pick a player TWICE per season.</strong> Availability resets after Gameweek 19.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-black uppercase tracking-wide border-b-2 border-barclays-cyan pb-2 mb-4">Not all players are equal</h2>
+          <p className="font-medium text-gray-700 leading-relaxed mb-4">
+            Points are awarded based on the position of the goalscorer you select:
+          </p>
+          <ul className="space-y-2 font-bold">
+            <li className="flex justify-between bg-gray-100 p-3 border-l-4 border-gray-400">
+              <span>FORWARD (FWD)</span> <span className="text-barclays-blue">1 POINT</span>
+            </li>
+            <li className="flex justify-between bg-gray-100 p-3 border-l-4 border-green-500">
+              <span>MIDFIELDER (MID)</span> <span className="text-barclays-blue">2 POINTS</span>
+            </li>
+            <li className="flex justify-between bg-gray-100 p-3 border-l-4 border-barclays-cyan">
+              <span>DEFENDER (DEF)</span> <span className="text-barclays-blue">3 POINTS</span>
+            </li>
+            <li className="flex justify-between bg-gray-100 p-3 border-l-4 border-yellow-400">
+              <span>GOALKEEPER (GK)</span> <span className="text-barclays-blue">10 POINTS</span>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-black uppercase tracking-wide border-b-2 border-barclays-cyan pb-2 mb-4">Get your timing right</h2>
+          <p className="font-medium text-gray-700 leading-relaxed">
+            Picks for a specific match lock at kick off. If you miss the deadline for that match, you can still make picks for the later games in that Gameweek. An email reminder will be sent each Friday lunchtime if you haven't already made your selections for the upcoming Gameweek.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-black uppercase tracking-wide border-b-2 border-barclays-cyan pb-2 mb-4">Wanna play for prizes?</h2>
+          <p className="font-medium text-gray-700 leading-relaxed">
+            Premiership Picks is entirely free to play. However, if you would like to compete for the prize pot, there is the option to do so for £10 - 100% of the pot will be distributed as prizes.
+          </p>
+          <div className="bg-gray-50 p-6 border-2 border-gray-300">
+            <p className="font-black text-barclays-dark uppercase tracking-wider mb-4 border-b border-gray-300 pb-2">How to enter:</p>
+            <ol className="list-decimal list-inside space-y-4 font-bold text-gray-700">
+              <li>
+                Send exactly £10 via <a href="https://revolut.me/thomasvd5r?currency=GBP&amount=1000" target="_blank" className="text-barclays-cyan hover:underline hover:text-barclays-blue transition">Revolut</a> or <a href="https://paypal.me/premiershippicks" target="_blank" className="text-barclays-cyan hover:underline hover:text-barclays-blue transition">PayPal</a>.
               </li>
-              <li className="flex justify-between border-b border-blue-200 pb-2">
-                <span>Midfielder</span>
-                <span className="font-bold">2pts per goal</span>
+              <li>
+                Choose the 'Friends and family' option and be sure to include your <strong>login email address</strong> in the payment reference note.
               </li>
-              <li className="flex justify-between border-b border-blue-200 pb-2">
-                <span>Defender</span>
-                <span className="font-bold">3pts per goal</span>
+              <li>
+                Your entry will be confirmed and an additional 'Prizes' tab will be added to the leaderboard.
               </li>
-              <li className="flex justify-between pt-1">
-                <span>Goalkeeper</span>
-                <span className="font-bold">10pts per goal</span>
-              </li>
-            </ul>
+            </ol>
           </div>
-          <p className="text-sm text-gray-500 mt-3 italic">
-            Example: If you pick a Midfielder and they score 2 goals, you would earn 4 points for that match.
-          </p>
-        </div>
-
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

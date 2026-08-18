@@ -1,15 +1,18 @@
 'use client';
 import { useState } from 'react';
 
-export default function AdminDashboard({ matches, players }) {
+export default function AdminDashboard({ matches, players, managers }) {
+  const [activeTab, setActiveTab] = useState('matches'); // 'matches' | 'managers'
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [loading, setLoading] = useState(false);
   
+  // Match States
   const [isFinished, setIsFinished] = useState(false);
   const [scoreTeamA, setScoreTeamA] = useState(0);
   const [scoreTeamB, setScoreTeamB] = useState(0);
   const [playerGoals, setPlayerGoals] = useState({});
 
+  // Match Functions
   const handleSelectMatch = (match) => {
     setSelectedMatch(match);
     setIsFinished(match.isFinished || false);
@@ -19,32 +22,20 @@ export default function AdminDashboard({ matches, players }) {
   };
 
   const handleGoalChange = (playerId, goals) => {
-    setPlayerGoals(prev => ({
-      ...prev,
-      [playerId]: parseInt(goals) || 0
-    }));
+    setPlayerGoals(prev => ({ ...prev, [playerId]: parseInt(goals) || 0 }));
   };
 
-  const handleSave = async () => {
+  const handleSaveMatch = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/update-match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          matchId: selectedMatch._id,
-          isFinished,
-          scoreTeamA,
-          scoreTeamB,
-          playerGoals
-        })
+        body: JSON.stringify({ matchId: selectedMatch._id, isFinished, scoreTeamA, scoreTeamB, playerGoals })
       });
-      
       if (res.ok) {
-        alert('Match & Leaderboard updated successfully!');
+        alert('Match updated!');
         window.location.reload();
-      } else {
-        alert('Failed to update.');
       }
     } catch (err) {
       console.error(err);
@@ -52,84 +43,122 @@ export default function AdminDashboard({ matches, players }) {
     setLoading(false);
   };
 
-  // 1. MATCH LIST VIEW
-  if (!selectedMatch) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {matches.map(m => (
-          <button 
-            key={m._id} 
-            onClick={() => handleSelectMatch(m)}
-            className={`p-4 rounded-xl border text-left hover:bg-gray-50 transition ${m.isFinished ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'}`}
-          >
-            <div className="text-xs text-gray-500 mb-1">GW {m.gameweek}</div>
-            <div className="font-bold">{m.teamA} vs {m.teamB}</div>
-            <div className="text-xs mt-2">{m.isFinished ? `Final: ${m.scoreTeamA} - ${m.scoreTeamB}` : 'Pending Result'}</div>
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  // 2. MATCH DETAIL VIEW (Update Scores & Goals)
-  const teamAPlayers = players.filter(p => p.team === selectedMatch.teamA);
-  const teamBPlayers = players.filter(p => p.team === selectedMatch.teamB);
+  // Manager Functions
+  const handleTogglePayment = async (email, currentStatus) => {
+    try {
+      const res = await fetch('/api/admin/entrants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, hasPaid: !currentStatus })
+      });
+      if (res.ok) window.location.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-      <button onClick={() => setSelectedMatch(null)} className="text-sm text-indigo-600 mb-4 hover:underline">
-        ◀ Back to Matches
-      </button>
-      
-      <h2 className="text-2xl font-bold mb-6">{selectedMatch.teamA} vs {selectedMatch.teamB}</h2>
-
-      {/* Score & Status */}
-      <div className="flex gap-4 items-end mb-8 bg-gray-50 p-4 rounded-lg">
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{selectedMatch.teamA} Score</label>
-          <input type="number" min="0" value={scoreTeamA} onChange={e => setScoreTeamA(e.target.value)} className="w-20 p-2 border rounded" />
-        </div>
-        <div className="pb-2 font-bold text-gray-400">-</div>
-        <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{selectedMatch.teamB} Score</label>
-          <input type="number" min="0" value={scoreTeamB} onChange={e => setScoreTeamB(e.target.value)} className="w-20 p-2 border rounded" />
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <input type="checkbox" id="finished" checked={isFinished} onChange={e => setIsFinished(e.target.checked)} className="w-5 h-5" />
-          <label htmlFor="finished" className="font-bold text-gray-800">Match Finished?</label>
-        </div>
+    <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-sm">
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6 border-b-2 border-gray-200 pb-4">
+        <button 
+          onClick={() => { setActiveTab('matches'); setSelectedMatch(null); }}
+          className={`font-bold uppercase tracking-wider px-4 py-2 ${activeTab === 'matches' ? 'bg-barclays-blue text-white' : 'bg-gray-100 text-gray-500'}`}
+        >
+          Update Matches
+        </button>
+        <button 
+          onClick={() => { setActiveTab('managers'); setSelectedMatch(null); }}
+          className={`font-bold uppercase tracking-wider px-4 py-2 ${activeTab === 'managers' ? 'bg-barclays-blue text-white' : 'bg-gray-100 text-gray-500'}`}
+        >
+          Prize Pot Entry
+        </button>
       </div>
 
-      {/* Goalscorer Assignment */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div>
-          <h3 className="font-bold text-lg mb-3 border-b pb-2">{selectedMatch.teamA} Goalscorers</h3>
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-            {teamAPlayers.map(p => (
-              <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span>{p.name}</span>
-                <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-16 p-1 border rounded text-center" />
-              </div>
-            ))}
-          </div>
+      {/* MANAGERS TAB */}
+      {activeTab === 'managers' && (
+        <div className="space-y-2">
+          {managers.map(m => (
+            <div key={m.email} className="flex justify-between items-center p-4 border border-gray-200 bg-gray-50">
+              <span className="font-bold">{m.email}</span>
+              <button 
+                onClick={() => handleTogglePayment(m.email, m.hasPaid)}
+                className={`px-4 py-2 font-black uppercase text-xs tracking-wider ${m.hasPaid ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}
+              >
+                {m.hasPaid ? '✓ PAID £10' : 'UNPAID'}
+              </button>
+            </div>
+          ))}
         </div>
-        
-        <div>
-          <h3 className="font-bold text-lg mb-3 border-b pb-2">{selectedMatch.teamB} Goalscorers</h3>
-          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-            {teamBPlayers.map(p => (
-              <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
-                <span>{p.name}</span>
-                <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-16 p-1 border rounded text-center" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
 
-      <button onClick={handleSave} disabled={loading} className="w-full bg-indigo-900 text-white font-bold py-4 rounded-xl hover:bg-indigo-800 transition">
-        {loading ? 'Processing...' : 'Save Results & Update Leaderboard'}
-      </button>
+      {/* MATCHES TAB (List View) */}
+      {activeTab === 'matches' && !selectedMatch && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {matches.map(m => (
+            <button 
+              key={m._id} 
+              onClick={() => handleSelectMatch(m)}
+              className={`p-4 border text-left transition ${m.isFinished ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-white'}`}
+            >
+              <div className="text-xs text-gray-500 mb-1 font-bold">GW {m.gameweek}</div>
+              <div className="font-black uppercase">{m.teamA} v {m.teamB}</div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* MATCHES TAB (Detail View) */}
+      {activeTab === 'matches' && selectedMatch && (
+        <div>
+          <button onClick={() => setSelectedMatch(null)} className="text-sm text-barclays-cyan font-bold uppercase mb-4 hover:underline">
+            ◀ Back to Matches
+          </button>
+          
+          <h2 className="text-2xl font-black uppercase mb-6">{selectedMatch.teamA} v {selectedMatch.teamB}</h2>
+
+          <div className="flex gap-4 items-end mb-8 bg-gray-100 p-4 border-l-4 border-barclays-blue">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{selectedMatch.teamA}</label>
+              <input type="number" min="0" value={scoreTeamA} onChange={e => setScoreTeamA(e.target.value)} className="w-16 p-2 border-2 border-gray-300 font-black" />
+            </div>
+            <div className="pb-2 font-bold">-</div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{selectedMatch.teamB}</label>
+              <input type="number" min="0" value={scoreTeamB} onChange={e => setScoreTeamB(e.target.value)} className="w-16 p-2 border-2 border-gray-300 font-black" />
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <input type="checkbox" id="finished" checked={isFinished} onChange={e => setIsFinished(e.target.checked)} className="w-5 h-5" />
+              <label htmlFor="finished" className="font-bold uppercase tracking-wider">Match Finished?</label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <h3 className="font-black uppercase tracking-wider mb-3 border-b-2 border-barclays-cyan pb-2">{selectedMatch.teamA} Goalscorers</h3>
+              {players.filter(p => p.team === selectedMatch.teamA).map(p => (
+                <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
+                  <span className="font-bold">{p.name}</span>
+                  <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
+                </div>
+              ))}
+            </div>
+            <div>
+              <h3 className="font-black uppercase tracking-wider mb-3 border-b-2 border-barclays-cyan pb-2">{selectedMatch.teamB} Goalscorers</h3>
+              {players.filter(p => p.team === selectedMatch.teamB).map(p => (
+                <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
+                  <span className="font-bold">{p.name}</span>
+                  <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button onClick={handleSaveMatch} disabled={loading} className="w-full bg-barclays-dark text-white font-black uppercase tracking-widest py-4 hover:bg-black transition border-b-4 border-barclays-blue">
+            {loading ? 'PROCESSING...' : 'SAVE SCORES'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

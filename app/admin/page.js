@@ -4,12 +4,13 @@ import { redirect } from 'next/navigation';
 import dbConnect from '@/lib/mongodb';
 import Match from '@/models/Match';
 import Player from '@/models/Player';
+import Pick from '@/models/Pick';
+import Entrant from '@/models/Entrant';
 import AdminDashboard from '@/components/AdminDashboard';
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
-  // Strict access check
   if (!session || session.user?.email !== 'tom.bramwell@reachplc.com') {
     redirect('/');
   }
@@ -18,8 +19,19 @@ export default async function AdminPage() {
 
   const matches = await Match.find().sort({ gameweek: 1, kickoffTime: 1 }).lean();
   const players = await Player.find().lean();
+  
+  // Get all unique users who have made picks, plus their payment status
+  const uniqueEmails = await Pick.distinct('userId');
+  const entrants = await Entrant.find().lean();
 
-  // Safely serialize MongoDB objects for Client Component
+  const managers = uniqueEmails.map(email => {
+    const entrantData = entrants.find(e => e.email === email);
+    return {
+      email,
+      hasPaid: entrantData?.hasPaid || false
+    };
+  });
+
   const serializedMatches = matches.map((m) => ({
     ...m,
     _id: m._id.toString(),
@@ -35,9 +47,8 @@ export default async function AdminPage() {
     <main className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
-        <p className="text-sm text-gray-500">Update scores and attribute goals</p>
       </div>
-      <AdminDashboard matches={serializedMatches} players={serializedPlayers} />
+      <AdminDashboard matches={serializedMatches} players={serializedPlayers} managers={managers} />
     </main>
   );
 }
