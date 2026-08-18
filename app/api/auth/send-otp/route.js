@@ -25,10 +25,10 @@ export async function POST(req) {
     await resend.emails.send({
       from: process.env.EMAIL_FROM,
       to: normalizedEmail,
-      subject: `${code} is your Premier League Picks code`,
+      subject: `${code} is your Premiership Picks code`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; text-align: center;">
-          <h2>Premier League Picks</h2>
+          <h2>Premiership Picks</h2>
           <p>Your verification code is:</p>
           <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #4F46E5; margin: 20px 0;">
             ${code}
