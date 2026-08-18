@@ -1,10 +1,54 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard({ matches, players, managers }) {
   const [activeTab, setActiveTab] = useState('matches'); // 'matches' | 'managers'
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [syncingPlayers, setSyncingPlayers] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+  const [syncError, setSyncError] = useState(null);
+  const router = useRouter();
+
+  const handlePlayerSync = async () => {
+  setSyncingPlayers(true);
+  setSyncResult(null);
+  setSyncError(null);
+
+  try {
+    const response = await fetch(
+      '/api/admin/sync-premier-league',
+      {
+        method: 'GET',
+        cache: 'no-store',
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || 'Player sync failed'
+      );
+    }
+
+    setSyncResult(data);
+  } catch (error) {
+    console.error(
+      'Player sync error:',
+      error
+    );
+    router.refresh();
+
+    setSyncError(
+      error.message ||
+      'Player sync failed'
+    );
+  } finally {
+    setSyncingPlayers(false);
+  }
+};
   
   // Match States
   const [isFinished, setIsFinished] = useState(false);
@@ -91,6 +135,90 @@ export default function AdminDashboard({ matches, players, managers }) {
           ))}
         </div>
       )}
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+  <div className="flex items-center justify-between gap-4">
+    <div>
+      <h2 className="text-lg font-bold text-gray-900">
+        Premier League Players
+      </h2>
+
+      <p className="text-sm text-gray-500 mt-1">
+        Update squads, transfers and squad numbers.
+      </p>
+    </div>
+
+    <button
+      onClick={handlePlayerSync}
+      disabled={syncingPlayers}
+      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {syncingPlayers
+        ? 'Syncing...'
+        : 'Sync Players'}
+    </button>
+  </div>
+
+  {syncingPlayers && (
+    <p className="mt-4 text-sm text-gray-500">
+      Fetching the latest Premier League squads...
+      This may take around 20–30 seconds.
+    </p>
+  )}
+
+  {syncError && (
+    <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
+      {syncError}
+    </div>
+  )}
+
+  {syncResult && (
+    <div className="mt-4 p-4 rounded-lg bg-green-50 text-green-800">
+      <p className="font-semibold">
+        Player sync completed
+      </p>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
+        <div>
+          <div className="font-bold">
+            {syncResult.clubsSuccessful}/
+            {syncResult.clubsFound}
+          </div>
+          <div className="text-green-700">
+            Clubs
+          </div>
+        </div>
+
+        <div>
+          <div className="font-bold">
+            {syncResult.playersProcessed}
+          </div>
+          <div className="text-green-700">
+            Players
+          </div>
+        </div>
+
+        <div>
+          <div className="font-bold">
+            {syncResult.transfersDetected}
+          </div>
+          <div className="text-green-700">
+            Transfers
+          </div>
+        </div>
+
+        <div>
+          <div className="font-bold">
+            {syncResult.squadNumberChanges}
+          </div>
+          <div className="text-green-700">
+            Number changes
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
 
       {/* MATCHES TAB (List View) */}
       {activeTab === 'matches' && !selectedMatch && (

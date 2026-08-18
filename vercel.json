@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-premier-league",
+      "schedule": "0 5 * * *"
+    }
+  ]
+}
