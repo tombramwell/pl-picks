@@ -106,10 +106,10 @@ export default async function DashboardPage(props) {
             </span>
           </div>
           
-<div className="flex items-center space-x-3">
+<div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
             <Link 
               href="/rules" 
-              className="text-sm text-barclays-cyan hover:text-white uppercase font-bold tracking-wider hidden sm:block mr-2"
+              className="text-sm text-barclays-cyan hover:text-white uppercase font-bold tracking-wider"
             >
               Rules
             </Link>

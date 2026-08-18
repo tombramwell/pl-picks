@@ -74,19 +74,19 @@ export default async function LeaderboardPage(props) {
         </Link>
       </div>
 
-      {/* Standings Table */}
-      <div className="bg-white border-2 border-gray-300 shadow-lg">
-        <table className="w-full text-left border-collapse">
+{/* Standings Table */}
+      <div className="bg-white border-2 border-gray-300 shadow-lg overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[450px]">
           <thead>
-            <tr className="bg-gray-200 border-b-2 border-gray-400 text-xs uppercase font-black text-gray-700 tracking-wider">
-              <th className="py-3 px-6 w-16 text-center border-r border-gray-300">Pos</th>
-              <th className="py-3 px-6 border-r border-gray-300">Manager</th>
-              <th className="py-3 px-6 text-center border-r border-gray-300">Pld</th>
-              <th className="py-3 px-6 text-center border-r border-gray-300">Gls</th>
-              <th className="py-3 px-6 text-center bg-gray-300 text-barclays-dark w-24">Pts</th>
+            <tr className="bg-gray-200 border-b-2 border-gray-400 text-[10px] md:text-xs uppercase font-black text-gray-700 tracking-wider">
+              <th className="py-3 px-2 md:px-6 w-12 text-center border-r border-gray-300">Pos</th>
+              <th className="py-3 px-3 md:px-6 border-r border-gray-300">Manager</th>
+              <th className="py-3 px-2 md:px-6 text-center border-r border-gray-300">Pld</th>
+              <th className="py-3 px-2 md:px-6 text-center border-r border-gray-300">Gls</th>
+              <th className="py-3 px-2 md:px-6 text-center bg-gray-300 text-barclays-dark w-16 md:w-24">Pts</th>
             </tr>
           </thead>
-          <tbody className="text-sm font-bold uppercase text-gray-800">
+          <tbody className="text-xs md:text-sm font-bold uppercase text-gray-800">
             {leaderboardData.map((row, index) => {
               const rank = index + 1;
               const isCurrentUser = row._id === currentUserEmail;
@@ -94,17 +94,17 @@ export default async function LeaderboardPage(props) {
 
               return (
                 <tr key={row._id} className={`border-b border-gray-200 hover:bg-blue-50 transition ${isCurrentUser ? 'bg-barclays-cyan bg-opacity-20' : 'bg-white'}`}>
-                  <td className="py-3 px-6 text-center border-r border-gray-200 text-gray-500 font-black">{rank}</td>
-                  <td className="py-3 px-6 border-r border-gray-200">
-                    <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex items-center gap-2">
-                      {row._id.split('@')[0]}
-                      {isPaidUser && <span className="text-lg" title="Prize Pot Entrant">🏆</span>}
-                      {isCurrentUser && <span className="text-[10px] bg-barclays-blue text-white px-2 py-0.5 tracking-wider">YOU</span>}
+                  <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500 font-black">{rank}</td>
+                  <td className="py-3 px-3 md:px-6 border-r border-gray-200">
+                    <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex flex-wrap items-center gap-1 md:gap-2">
+                      <span className="break-all">{row._id.split('@')[0]}</span>
+                      {isPaidUser && <span className="text-base md:text-lg" title="Prize Pot Entrant">🏆</span>}
+                      {isCurrentUser && <span className="text-[9px] md:text-[10px] bg-barclays-blue text-white px-1.5 py-0.5 tracking-wider">YOU</span>}
                     </Link>
                   </td>
-                  <td className="py-3 px-6 text-center border-r border-gray-200 text-gray-500">{row.totalPicksMade}</td>
-                  <td className="py-3 px-6 text-center border-r border-gray-200 text-gray-500">{row.totalGoals}</td>
-                  <td className="py-3 px-6 text-center font-black text-lg bg-gray-50 text-barclays-blue">{row.totalPoints || 0}</td>
+                  <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500">{row.totalPicksMade}</td>
+                  <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500">{row.totalGoals}</td>
+                  <td className="py-3 px-2 md:px-6 text-center font-black text-base md:text-lg bg-gray-50 text-barclays-blue">{row.totalPoints || 0}</td>
                 </tr>
               );
             })}
