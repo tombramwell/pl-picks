@@ -5,8 +5,8 @@ import Navbar from '@/components/Navbar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'PL Picks',
-  description: 'A longer, more tortuous version of the Just Fontaine Challenge. ',
+  title: 'Premiership Picks',
+  description: 'A proper game for proper Barclays lovers',
 };
 
 

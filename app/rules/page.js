@@ -76,7 +76,10 @@ export default function RulesPage() {
                 Choose the 'Friends and family' option and be sure to include your <strong>login email address</strong> in the payment reference note.
               </li>
               <li>
-                Your entry will be confirmed and an additional 'Prizes' tab will be added to the leaderboard.
+                Your entry will be confirmed and you will be added to the additonal 'Prizes' tab on the leaderboard.
+              </li>
+              <li>
+                Entries will be accepted until the end of the first international break - before Gameweek 6. Payments must be received by that point or you'll be playing for fun only.
               </li>
             </ol>
           </div>
