@@ -15,84 +15,59 @@ export default function AdminDashboard({ matches, players, managers }) {
   const [fixtureSyncError, setFixtureSyncError] = useState(null);
 
   const handlePlayerSync = async () => {
-  setSyncingPlayers(true);
-  setSyncResult(null);
-  setSyncError(null);
+    setSyncingPlayers(true);
+    setSyncResult(null);
+    setSyncError(null);
 
-  try {
-    const response = await fetch(
-      '/api/admin/sync-premier-league',
-      {
+    try {
+      const response = await fetch('/api/admin/sync-premier-league', {
         method: 'GET',
         cache: 'no-store',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Player sync failed');
       }
-    );
 
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(
-        data.error || 'Player sync failed'
-      );
+      setSyncResult(data);
+    } catch (error) {
+      console.error('Player sync error:', error);
+      router.refresh();
+      setSyncError(error.message || 'Player sync failed');
+    } finally {
+      setSyncingPlayers(false);
     }
-
-    setSyncResult(data);
-  } catch (error) {
-    console.error(
-      'Player sync error:',
-      error
-    );
-    router.refresh();
-
-    setSyncError(
-      error.message ||
-      'Player sync failed'
-    );
-  } finally {
-    setSyncingPlayers(false);
-  }
-};
+  };
 
   const handleFixtureSync = async () => {
-  setSyncingFixtures(true);
-  setFixtureSyncResult(null);
-  setFixtureSyncError(null);
+    setSyncingFixtures(true);
+    setFixtureSyncResult(null);
+    setFixtureSyncError(null);
 
-  try {
-    const response = await fetch(
-      '/api/admin/sync-fixtures',
-      {
+    try {
+      const response = await fetch('/api/admin/sync-fixtures', {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Fixture sync failed');
       }
-    );
 
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(
-        data.error || 'Fixture sync failed'
-      );
+      setFixtureSyncResult(data);
+      router.refresh();
+    } catch (error) {
+      console.error('Fixture sync error:', error);
+      setFixtureSyncError(error.message || 'Fixture sync failed');
+    } finally {
+      setSyncingFixtures(false);
     }
-
-    setFixtureSyncResult(data);
-
-    router.refresh();
-  } catch (error) {
-    console.error(
-      'Fixture sync error:',
-      error
-    );
-
-    setFixtureSyncError(
-      error.message ||
-      'Fixture sync failed'
-    );
-  } finally {
-    setSyncingFixtures(false);
-  }
-};
+  };
   
   // Match States
   const [isFinished, setIsFinished] = useState(false);
@@ -145,6 +120,10 @@ export default function AdminDashboard({ matches, players, managers }) {
     }
   };
 
+  // Filter matches into Active and Completed arrays
+  const activeMatches = matches.filter(m => !m.isFinished);
+  const completedMatches = matches.filter(m => m.isFinished);
+
   return (
     <div className="bg-white p-6 rounded-xl border-2 border-gray-300 shadow-sm">
       {/* Tabs */}
@@ -180,218 +159,132 @@ export default function AdminDashboard({ matches, players, managers }) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-  <div className="flex items-center justify-between gap-4">
-    <div>
-      <h2 className="text-lg font-bold text-gray-900">
-        Premier League Players
-      </h2>
-
-      <p className="text-sm text-gray-500 mt-1">
-        Update squads, transfers and squad numbers.
-      </p>
-    </div>
-
-    <button
-      onClick={handlePlayerSync}
-      disabled={syncingPlayers}
-      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {syncingPlayers
-        ? 'Syncing...'
-        : 'Sync Players'}
-    </button>
-  </div>
-
-  {syncingPlayers && (
-    <p className="mt-4 text-sm text-gray-500">
-      Fetching the latest Premier League squads...
-      This may take around 20–30 seconds.
-    </p>
-  )}
-
-  {syncError && (
-    <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
-      {syncError}
-    </div>
-  )}
-
-  {syncResult && (
-    <div className="mt-4 p-4 rounded-lg bg-green-50 text-green-800">
-      <p className="font-semibold">
-        Player sync completed
-      </p>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-        <div>
-          <div className="font-bold">
-            {syncResult.clubsSuccessful}/
-            {syncResult.clubsFound}
-          </div>
-          <div className="text-green-700">
-            Clubs
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {syncResult.playersProcessed}
-          </div>
-          <div className="text-green-700">
-            Players
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {syncResult.transfersDetected}
-          </div>
-          <div className="text-green-700">
-            Transfers
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {syncResult.squadNumberChanges}
-          </div>
-          <div className="text-green-700">
-            Number changes
-          </div>
-        </div>
-      </div>
-    </div>
-  )}
-</div>
-
-<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-  <div className="flex items-center justify-between gap-4">
-    <div>
-      <h2 className="text-lg font-bold text-gray-900">
-        Premier League Fixtures
-      </h2>
-
-      <p className="text-sm text-gray-500 mt-1">
-        Check for fixture date and kick-off time changes.
-      </p>
-    </div>
-
-    <button
-      onClick={handleFixtureSync}
-      disabled={syncingFixtures}
-      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {syncingFixtures
-        ? 'Syncing...'
-        : 'Sync Fixtures'}
-    </button>
-  </div>
-
-  {syncingFixtures && (
-    <p className="mt-4 text-sm text-gray-500">
-      Checking the latest Premier League fixture list...
-    </p>
-  )}
-
-  {fixtureSyncError && (
-    <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">
-      {fixtureSyncError}
-    </div>
-  )}
-
-  {fixtureSyncResult && (
-    <div className="mt-4 p-4 rounded-lg bg-green-50 text-green-800">
-      <p className="font-semibold">
-        Fixture sync completed
-      </p>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-        <div>
-          <div className="font-bold">
-            {fixtureSyncResult.fixturesFound}
-          </div>
-          <div className="text-green-700">
-            Fixtures checked
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {fixtureSyncResult.fixturesUpdated}
-          </div>
-          <div className="text-green-700">
-            Updated
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {fixtureSyncResult.kickoffChanges}
-          </div>
-          <div className="text-green-700">
-            Kick-off changes
-          </div>
-        </div>
-
-        <div>
-          <div className="font-bold">
-            {fixtureSyncResult.errors?.length || 0}
-          </div>
-          <div className="text-green-700">
-            Errors
-          </div>
-        </div>
-      </div>
-
-      {fixtureSyncResult.changes?.length > 0 && (
-        <div className="mt-4">
-          <p className="font-semibold mb-2">
-            Changes detected
-          </p>
-
-          {fixtureSyncResult.changes.map(
-            (change, index) => (
-              <div
-                key={index}
-                className="text-sm border-t border-green-200 py-2"
+      {/* SYNC PANELS (Only show when looking at Matches list view) */}
+      {activeTab === 'matches' && !selectedMatch && (
+        <>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Premier League Players</h2>
+                <p className="text-sm text-gray-500 mt-1">Update squads, transfers and squad numbers.</p>
+              </div>
+              <button
+                onClick={handlePlayerSync}
+                disabled={syncingPlayers}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <strong>
-                  {change.fixture}
-                </strong>
+                {syncingPlayers ? 'Syncing...' : 'Sync Players'}
+              </button>
+            </div>
+            {syncingPlayers && <p className="mt-4 text-sm text-gray-500">Fetching the latest Premier League squads... This may take around 20–30 seconds.</p>}
+            {syncError && <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{syncError}</div>}
+            {syncResult && (
+              <div className="mt-4 p-4 rounded-lg bg-green-50 text-green-800">
+                <p className="font-semibold">Player sync completed</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
+                  <div><div className="font-bold">{syncResult.clubsSuccessful}/{syncResult.clubsFound}</div><div className="text-green-700">Clubs</div></div>
+                  <div><div className="font-bold">{syncResult.playersProcessed}</div><div className="text-green-700">Players</div></div>
+                  <div><div className="font-bold">{syncResult.transfersDetected}</div><div className="text-green-700">Transfers</div></div>
+                  <div><div className="font-bold">{syncResult.squadNumberChanges}</div><div className="text-green-700">Number changes</div></div>
+                </div>
+              </div>
+            )}
+          </div>
 
-                {change.changes?.kickoffTime && (
-                  <div>
-                    {
-                      change.changes.kickoffTime.old
-                    }
-                    {' → '}
-                    {
-                      change.changes.kickoffTime.new
-                    }
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Premier League Fixtures</h2>
+                <p className="text-sm text-gray-500 mt-1">Check for fixture date and kick-off time changes.</p>
+              </div>
+              <button
+                onClick={handleFixtureSync}
+                disabled={syncingFixtures}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {syncingFixtures ? 'Syncing...' : 'Sync Fixtures'}
+              </button>
+            </div>
+            {syncingFixtures && <p className="mt-4 text-sm text-gray-500">Checking the latest Premier League fixture list...</p>}
+            {fixtureSyncError && <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{fixtureSyncError}</div>}
+            {fixtureSyncResult && (
+              <div className="mt-4 p-4 rounded-lg bg-green-50 text-green-800">
+                <p className="font-semibold">Fixture sync completed</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
+                  <div><div className="font-bold">{fixtureSyncResult.fixturesFound}</div><div className="text-green-700">Fixtures checked</div></div>
+                  <div><div className="font-bold">{fixtureSyncResult.fixturesUpdated}</div><div className="text-green-700">Updated</div></div>
+                  <div><div className="font-bold">{fixtureSyncResult.kickoffChanges}</div><div className="text-green-700">Kick-off changes</div></div>
+                  <div><div className="font-bold">{fixtureSyncResult.errors?.length || 0}</div><div className="text-green-700">Errors</div></div>
+                </div>
+                {fixtureSyncResult.changes?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="font-semibold mb-2">Changes detected</p>
+                    {fixtureSyncResult.changes.map((change, index) => (
+                      <div key={index} className="text-sm border-t border-green-200 py-2">
+                        <strong>{change.fixture}</strong>
+                        {change.changes?.kickoffTime && (
+                          <div>{change.changes.kickoffTime.old} {' → '} {change.changes.kickoffTime.new}</div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            )
-          )}
-        </div>
+            )}
+          </div>
+        </>
       )}
-    </div>
-  )}
-</div>
 
       {/* MATCHES TAB (List View) */}
       {activeTab === 'matches' && !selectedMatch && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {matches.map(m => (
-            <button 
-              key={m._id} 
-              onClick={() => handleSelectMatch(m)}
-              className={`p-4 border text-left transition ${m.isFinished ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-white'}`}
-            >
-              <div className="text-xs text-gray-500 mb-1 font-bold">GW {m.gameweek}</div>
-              <div className="font-black uppercase">{m.teamA} v {m.teamB}</div>
-            </button>
-          ))}
+        <div className="space-y-8">
+          
+          {/* 1. Active Matches */}
+          <div>
+            <h3 className="font-black uppercase text-barclays-dark tracking-wider mb-4 border-b-2 border-barclays-cyan pb-2">
+              Upcoming & Active Matches
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeMatches.length > 0 ? (
+                activeMatches.map(m => (
+                  <button 
+                    key={m._id} 
+                    onClick={() => handleSelectMatch(m)}
+                    className="p-4 border text-left transition border-gray-300 bg-white hover:border-barclays-cyan hover:shadow-md"
+                  >
+                    <div className="text-xs text-gray-500 mb-1 font-bold">GW {m.gameweek}</div>
+                    <div className="font-black uppercase">{m.teamA} v {m.teamB}</div>
+                  </button>
+                ))
+              ) : (
+                <div className="text-gray-500 font-bold col-span-2 p-4 bg-gray-50 border border-gray-200">
+                  No active matches pending.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 2. Completed Matches */}
+          {completedMatches.length > 0 && (
+            <div>
+              <h3 className="font-black uppercase text-gray-400 tracking-wider mb-4 border-b-2 border-gray-200 pb-2">
+                Completed Matches
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60 hover:opacity-100 transition-opacity">
+                {completedMatches.map(m => (
+                  <button 
+                    key={m._id} 
+                    onClick={() => handleSelectMatch(m)}
+                    className="p-4 border text-left transition border-green-500 bg-green-50"
+                  >
+                    <div className="text-xs text-green-700 mb-1 font-bold">GW {m.gameweek}</div>
+                    <div className="font-black uppercase text-green-900">{m.teamA} v {m.teamB}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 

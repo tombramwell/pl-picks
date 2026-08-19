@@ -58,7 +58,7 @@ export async function POST(req) {
     // Send the code via Resend
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'Premiership Picks <auth@tombramwell.com>',
+      from: process.env.EMAIL_FROM || 'Premiership Picks <premiershippicks@tombramwell.com>',
       to: normalizedEmail,
       subject: `${code} is your Premiership Picks code`,
       html: htmlContent,
