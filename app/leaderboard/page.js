@@ -70,7 +70,7 @@ export default async function LeaderboardPage(props) {
             isPaidView ? 'bg-yellow-400 text-black border-yellow-600 shadow-md' : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
           }`}
         >
-          🏆 Prize Pot (£10)
+          🏆 Prizes
         </Link>
       </div>
 
@@ -98,7 +98,7 @@ export default async function LeaderboardPage(props) {
                   <td className="py-3 px-3 md:px-6 border-r border-gray-200">
                     <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex flex-wrap items-center gap-1 md:gap-2">
                       <span className="break-all">{row._id.split('@')[0]}</span>
-                      {isPaidUser && <span className="text-base md:text-lg" title="Prize Pot Entrant">🏆</span>}
+                      {/* {isPaidUser && <span className="text-base md:text-lg" title="Prize Pot Entrant">🏆</span>} */}
                       {isCurrentUser && <span className="text-[9px] md:text-[10px] bg-barclays-blue text-white px-1.5 py-0.5 tracking-wider">YOU</span>}
                     </Link>
                   </td>
