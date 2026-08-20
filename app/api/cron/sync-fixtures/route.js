@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import dbConnect from '@/lib/mongodb';
 
 import {
   syncPremierLeagueFixtures,
@@ -27,6 +28,8 @@ export async function GET(req) {
   }
 
   try {
+    await dbConnect();
+
     const result =
       await syncPremierLeagueFixtures();
 

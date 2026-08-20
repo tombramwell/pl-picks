@@ -2,6 +2,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
+import dbConnect from '@/lib/mongodb';
+
 import {
   syncPremierLeagueFixtures,
 } from '@/lib/premierLeague/syncFixtures';
@@ -10,6 +12,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await dbConnect();
+
     const session =
       await getServerSession(authOptions);
 
