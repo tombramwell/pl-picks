@@ -1,36 +1,30 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-
+import dbConnect from '@/lib/mongodb';
 import { syncPremierLeaguePlayers } from '@/lib/premierLeague/syncPlayers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const session =
-    await getServerSession(authOptions);
+  const authHeader =
+  headers().get('authorization');
 
-  if (
-    !session ||
-    session.user?.email !==
-      'tom.bramwell@reachplc.com'
-  ) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Unauthorized',
-      },
-      {
-        status: 401,
-      }
-    );
-  }
+if (
+  authHeader !==
+  `Bearer ${process.env.CRON_SECRET}`
+) {
+  return NextResponse.json(
+    { success: false },
+    { status: 401 }
+  );
+}
 
   try {
     console.log(
       'Manual Premier League player sync started'
     );
-
+    await dbConnect();
     const result =
       await syncPremierLeaguePlayers();
 
