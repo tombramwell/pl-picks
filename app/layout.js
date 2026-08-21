@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   title: 'Premiership Picks',
-  description: 'A proper game for proper Barclays lovers',
+  description: 'Select your scorer. Earn points. Win prizes?',
 };
 
 
