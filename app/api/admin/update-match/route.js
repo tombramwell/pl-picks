@@ -1,66 +1,53 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Match from '@/models/Match';
 import Pick from '@/models/Pick';
-import Player from '@/models/Player'; // We need this to check positions
-
-const ADMIN_EMAILS = ['tom.bramwell@reachplc.com'];
-
-// Multiplier mapping
-const getMultiplier = (position) => {
-  if (position === 'GK') return 10;
-  if (position === 'DEF') return 3;
-  if (position === 'MID') return 2;
-  return 1; // FWD
-};
+import Player from '@/models/Player';
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !ADMIN_EMAILS.includes(session.user?.email)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { matchId, scoreTeamA, scoreTeamB, playerGoals, isFinished } = await req.json();
     await dbConnect();
+    const { matchId, isFinished, scoreTeamA, scoreTeamB, playerGoals } = await req.json();
 
-    // 1. Update Match Score
-    const match = await Match.findByIdAndUpdate(
-      matchId, 
-      { scoreTeamA, scoreTeamB, isFinished },
-      { new: true }
-    );
-
-    // 2. Reset goals and points for this match first (in case of corrections)
-    await Pick.updateMany({ matchId }, { goalsScored: 0, points: 0 });
-
-    // 3. Fetch the players who scored to get their positions
-    const scoringPlayerIds = Object.keys(playerGoals).filter(id => playerGoals[id] > 0);
-    const scoringPlayers = await Player.find({ _id: { $in: scoringPlayerIds } });
-    
-    const positionMap = {};
-    scoringPlayers.forEach(p => {
-      positionMap[p._id.toString()] = p.position;
+    // 1. Update the Match scores and status
+    await Match.findByIdAndUpdate(matchId, {
+      isFinished,
+      scoreTeamA,
+      scoreTeamB
     });
 
-    // 4. Apply new goals AND points to users' picks
-    for (const [playerId, goals] of Object.entries(playerGoals)) {
-      if (goals > 0) {
-        const position = positionMap[playerId] || 'FWD';
-        const pointsEarned = goals * getMultiplier(position);
+    // 2. Fetch all user Picks for this specific match
+    const picks = await Pick.find({ matchId });
 
-        await Pick.updateMany(
-          { matchId, playerId },
-          { $set: { goalsScored: goals, points: pointsEarned } }
-        );
+    // 3. Update each pick with the correct positional multipliers!
+    for (const pick of picks) {
+      const goalsScored = playerGoals[pick.playerId] || 0;
+      let points = 0;
+
+      if (goalsScored > 0) {
+        // Find the player in the database to check their position
+        const player = await Player.findById(pick.playerId);
+        
+        let multiplier = 1; // Default for Forward (1x)
+        if (player) {
+          if (player.position === 'Midfielder') multiplier = 2;
+          if (player.position === 'Defender') multiplier = 3;
+          if (player.position === 'Goalkeeper') multiplier = 10;
+        }
+        
+        points = goalsScored * multiplier;
       }
+
+      // Save the mathematically corrected points to the user's pick
+      await Pick.findByIdAndUpdate(pick._id, {
+        goalsScored,
+        points
+      });
     }
 
-    return NextResponse.json({ success: true, match });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Admin Update Error:", error);
-    return NextResponse.json({ error: "Failed to update match" }, { status: 500 });
+    console.error('Update Match Error:', error);
+    return NextResponse.json({ error: 'Failed to update match' }, { status: 500 });
   }
 }

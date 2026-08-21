@@ -14,6 +14,9 @@ export default function AdminDashboard({ matches, players, managers }) {
   const [fixtureSyncResult, setFixtureSyncResult] = useState(null);
   const [fixtureSyncError, setFixtureSyncError] = useState(null);
 
+  // New state for live saving feedback
+  const [saveStatus, setSaveStatus] = useState('');
+
   const handlePlayerSync = async () => {
     setSyncingPlayers(true);
     setSyncResult(null);
@@ -42,9 +45,9 @@ export default function AdminDashboard({ matches, players, managers }) {
   };
 
   const normalizeTeamName = (teamName) => {
-  if (!teamName) return '';
-  return teamName.toLowerCase().replace(' & ', ' and ').trim();
-};
+    if (!teamName) return '';
+    return teamName.toLowerCase().replace(' & ', ' and ').trim();
+  };
 
   const handleFixtureSync = async () => {
     setSyncingFixtures(true);
@@ -95,18 +98,33 @@ export default function AdminDashboard({ matches, players, managers }) {
 
   const handleSaveMatch = async () => {
     setLoading(true);
+    setSaveStatus('SAVING...');
+    
     try {
       const res = await fetch('/api/admin/update-match', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: selectedMatch._id, isFinished, scoreTeamA, scoreTeamB, playerGoals })
+        body: JSON.stringify({ 
+          matchId: selectedMatch._id, 
+          isFinished, 
+          scoreTeamA, 
+          scoreTeamB, 
+          playerGoals 
+        })
       });
+      
       if (res.ok) {
-        alert('Match updated!');
-        window.location.reload();
+        setSaveStatus('✅ SCORES UPDATED LIVE');
+        // Reset the button text after 2 seconds so you can save again later
+        setTimeout(() => setSaveStatus(''), 2000);
+      } else {
+        setSaveStatus('❌ ERROR SAVING');
+        setTimeout(() => setSaveStatus(''), 2000);
       }
     } catch (err) {
       console.error(err);
+      setSaveStatus('❌ ERROR SAVING');
+      setTimeout(() => setSaveStatus(''), 2000);
     }
     setLoading(false);
   };
@@ -324,7 +342,7 @@ export default function AdminDashboard({ matches, players, managers }) {
               {players.filter(p => normalizeTeamName(p.team) === normalizeTeamName(selectedMatch.teamA)).map(p => (
                 <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
                   <span className="font-bold">{p.name}</span>
-                  <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
+                  <input type="number" min="0" placeholder="0" value={playerGoals[p._id] || ''} onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
                 </div>
               ))}
             </div>
@@ -333,14 +351,22 @@ export default function AdminDashboard({ matches, players, managers }) {
               {players.filter(p => normalizeTeamName(p.team) === normalizeTeamName(selectedMatch.teamB)).map(p => (
                 <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
                   <span className="font-bold">{p.name}</span>
-                  <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
+                  <input type="number" min="0" placeholder="0" value={playerGoals[p._id] || ''} onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
                 </div>
               ))}
             </div>
           </div>
 
-          <button onClick={handleSaveMatch} disabled={loading} className="w-full bg-barclays-dark text-white font-black uppercase tracking-widest py-4 hover:bg-black transition border-b-4 border-barclays-blue">
-            {loading ? 'PROCESSING...' : 'SAVE SCORES'}
+          <button 
+            onClick={handleSaveMatch} 
+            disabled={loading} 
+            className={`w-full text-white font-black uppercase tracking-widest py-4 transition border-b-4 ${
+              isFinished 
+                ? 'bg-green-600 hover:bg-green-700 border-green-800' 
+                : 'bg-barclays-dark hover:bg-black border-barclays-blue' 
+            }`}
+          >
+            {saveStatus ? saveStatus : (isFinished ? 'SAVE & FINISH MATCH' : 'UPDATE LIVE SCORES')}
           </button>
         </div>
       )}
