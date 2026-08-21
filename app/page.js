@@ -17,6 +17,11 @@ export default async function DashboardPage(props) {
 
   await dbConnect();
 
+  const normalizeTeamName = (teamName) => {
+  if (!teamName) return '';
+  return teamName.toLowerCase().replace(' & ', ' and ').trim();
+};
+
   // 2. Fetch Data
   const matches = await Match.find().sort({ kickoffTime: 1 }).lean();
   const players = await Player.find().lean();
@@ -75,10 +80,11 @@ export default async function DashboardPage(props) {
     };
   });
 
-  const playersByTeam = {};
+const playersByTeam = {};
   players.forEach(p => {
-    if (!playersByTeam[p.team]) playersByTeam[p.team] = [];
-    playersByTeam[p.team].push({
+    const normalizedTeam = normalizeTeamName(p.team);
+    if (!playersByTeam[normalizedTeam]) playersByTeam[normalizedTeam] = [];
+    playersByTeam[normalizedTeam].push({
       ...p,
       _id: p._id.toString()
     });
@@ -170,8 +176,8 @@ export default async function DashboardPage(props) {
               key={match._id}
               match={match} 
               currentPick={userPicksMap[match._id]}
-              teamAPlayers={playersByTeam[match.teamA] || []}
-              teamBPlayers={playersByTeam[match.teamB] || []}
+              teamAPlayers={playersByTeam[normalizeTeamName(match.teamA)] || []}
+              teamBPlayers={playersByTeam[normalizeTeamName(match.teamB)] || []}
               usedPlayerIds={usedPlayerIds}
               userId={session.user.email}
             />

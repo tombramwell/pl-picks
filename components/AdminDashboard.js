@@ -41,6 +41,11 @@ export default function AdminDashboard({ matches, players, managers }) {
     }
   };
 
+  const normalizeTeamName = (teamName) => {
+  if (!teamName) return '';
+  return teamName.toLowerCase().replace(' & ', ' and ').trim();
+};
+
   const handleFixtureSync = async () => {
     setSyncingFixtures(true);
     setFixtureSyncResult(null);
@@ -316,7 +321,7 @@ export default function AdminDashboard({ matches, players, managers }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
               <h3 className="font-black uppercase tracking-wider mb-3 border-b-2 border-barclays-cyan pb-2">{selectedMatch.teamA} Goalscorers</h3>
-              {players.filter(p => p.team === selectedMatch.teamA).map(p => (
+              {players.filter(p => normalizeTeamName(p.team) === normalizeTeamName(selectedMatch.teamA)).map(p => (
                 <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
                   <span className="font-bold">{p.name}</span>
                   <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
@@ -325,7 +330,7 @@ export default function AdminDashboard({ matches, players, managers }) {
             </div>
             <div>
               <h3 className="font-black uppercase tracking-wider mb-3 border-b-2 border-barclays-cyan pb-2">{selectedMatch.teamB} Goalscorers</h3>
-              {players.filter(p => p.team === selectedMatch.teamB).map(p => (
+              {players.filter(p => normalizeTeamName(p.team) === normalizeTeamName(selectedMatch.teamB)).map(p => (
                 <div key={p._id} className="flex justify-between items-center text-sm border-b border-gray-200 py-1">
                   <span className="font-bold">{p.name}</span>
                   <input type="number" min="0" placeholder="0" onChange={e => handleGoalChange(p._id, e.target.value)} className="w-12 p-1 border border-gray-300 text-center" />
