@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminDashboard({ matches, players, managers }) {
   const [activeTab, setActiveTab] = useState('matches'); // 'matches' | 'managers'
@@ -275,6 +276,19 @@ export default function AdminDashboard({ matches, players, managers }) {
           </div>
         </>
       )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+      <Link 
+  href="/admin/stats" 
+  className="bg-gray-800 text-white font-black uppercase tracking-widest px-4 py-2 text-xs hover:bg-black transition ml-2 border border-gray-900 shadow-sm"
+>
+  📊 View Pick Stats
+</Link>
+      </div>
+            </div>
+          </div>
+
 
       {/* MATCHES TAB (List View) */}
       {activeTab === 'matches' && !selectedMatch && (
