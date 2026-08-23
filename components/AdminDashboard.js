@@ -255,6 +255,24 @@ export default function AdminDashboard({ matches, players, managers }) {
               </div>
             )}
           </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Auto-Score Live Matches</h2>
+                <p className="text-sm text-gray-500 mt-1">Fetch live goals and calculate points for matches currently in progress.</p>
+              </div>
+<button
+                onClick={async () => {
+                  alert('Triggering auto-score...');
+                  await fetch('/api/cron/auto-score'); 
+                  window.location.reload();
+                }}
+                className="px-4 py-2 rounded-lg bg-green-600 text-white font-black uppercase tracking-wider hover:bg-green-700"
+              >
+                Fetch Live Scores
+              </button>
+            </div>
+          </div>
         </>
       )}
 

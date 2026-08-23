@@ -74,37 +74,55 @@ export default async function LeaderboardPage(props) {
         </Link>
       </div>
 
-{/* Standings Table */}
-      <div className="bg-white border-2 border-gray-300 shadow-lg overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[450px]">
+      {/* Mobile Swipe Hint */}
+      <div className="md:hidden flex justify-end mb-2">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1.5 border border-gray-200">
+          👈 Swipe for full stats 👉
+        </span>
+      </div>
+
+      {/* Standings Table */}
+      <div className="bg-white border-2 border-gray-300 shadow-lg overflow-x-auto relative">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
             <tr className="bg-gray-200 border-b-2 border-gray-400 text-[10px] md:text-xs uppercase font-black text-gray-700 tracking-wider">
-              <th className="py-3 px-2 md:px-6 w-12 text-center border-r border-gray-300">Pos</th>
+              <th className="py-3 px-2 md:px-6 w-10 md:w-12 text-center border-r border-gray-300">Pos</th>
               <th className="py-3 px-3 md:px-6 border-r border-gray-300">Manager</th>
               <th className="py-3 px-2 md:px-6 text-center border-r border-gray-300">Pld</th>
               <th className="py-3 px-2 md:px-6 text-center border-r border-gray-300">Gls</th>
-              <th className="py-3 px-2 md:px-6 text-center bg-gray-300 text-barclays-dark w-16 md:w-24">Pts</th>
+              
+              {/* Sticky Points Header */}
+              <th className="py-3 px-3 md:px-6 text-center bg-gray-300 text-barclays-dark w-16 md:w-24 sticky right-0 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.15)] md:shadow-none">
+                Pts
+              </th>
             </tr>
           </thead>
           <tbody className="text-xs md:text-sm font-bold uppercase text-gray-800">
             {leaderboardData.map((row, index) => {
               const rank = index + 1;
               const isCurrentUser = row._id === currentUserEmail;
-              const isPaidUser = paidEmails.includes(row._id);
 
               return (
-                <tr key={row._id} className={`border-b border-gray-200 hover:bg-blue-50 transition ${isCurrentUser ? 'bg-barclays-cyan bg-opacity-20' : 'bg-white'}`}>
+                <tr key={row._id} className={`border-b border-gray-200 transition ${isCurrentUser ? 'bg-barclays-cyan bg-opacity-20' : 'bg-white hover:bg-blue-50'}`}>
                   <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500 font-black">{rank}</td>
+                  
                   <td className="py-3 px-3 md:px-6 border-r border-gray-200">
-                    <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex flex-wrap items-center gap-1 md:gap-2">
-                      <span className="break-all">{row._id.split('@')[0]}</span>
-                      {/* {isPaidUser && <span className="text-base md:text-lg" title="Prize Pot Entrant">🏆</span>} */}
-                      {isCurrentUser && <span className="text-[9px] md:text-[10px] bg-barclays-blue text-white px-1.5 py-0.5 tracking-wider">YOU</span>}
+                    <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex items-center gap-2">
+                      {/* Truncate long emails on mobile so they don't force massive scrolling */}
+                      <span className="truncate max-w-[120px] sm:max-w-none inline-block align-middle">
+                        {row._id.split('@')[0]}
+                      </span>
+                      {isCurrentUser && <span className="text-[9px] md:text-[10px] bg-barclays-blue text-white px-1.5 py-0.5 tracking-wider shrink-0">YOU</span>}
                     </Link>
                   </td>
+                  
                   <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500">{row.totalPicksMade}</td>
                   <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500">{row.totalGoals}</td>
-                  <td className="py-3 px-2 md:px-6 text-center font-black text-base md:text-lg bg-gray-50 text-barclays-blue">{row.totalPoints || 0}</td>
+                  
+                  {/* Sticky Points Cell */}
+                  <td className={`py-3 px-3 md:px-6 text-center font-black text-base md:text-lg text-barclays-blue sticky right-0 z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.15)] md:shadow-none ${isCurrentUser ? 'bg-[#cceeff]' : 'bg-gray-100'}`}>
+                    {row.totalPoints || 0}
+                  </td>
                 </tr>
               );
             })}

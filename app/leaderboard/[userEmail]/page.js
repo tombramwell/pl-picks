@@ -33,71 +33,90 @@ export default async function UserBreakdownPage(props) {
   const totalGoals = breakdown.reduce((sum, p) => sum + (p.goalsScored || 0), 0);
 
   return (
-    <main className="max-w-3xl mx-auto p-4 md:p-8 min-h-screen">
+    <main className="max-w-4xl mx-auto p-4 md:p-8 min-h-screen">
       
-      {/* Header */}
-      <div className="flex justify-between items-start mb-8">
+      {/* Broadcast Style Header */}
+      <div className="bg-gradient-to-b from-barclays-blue to-barclays-dark text-white p-6 border-b-4 border-barclays-cyan mb-6 flex justify-between items-end shadow-md">
         <div>
-          <Link href="/leaderboard" className="text-sm text-indigo-600 hover:underline mb-2 inline-block">
-            ◀ Back to Leaderboard
-          </Link>
-          <h1 className="text-3xl font-extrabold text-gray-900">{displayName}'s Picks</h1>
-          <p className="text-sm text-gray-500">Season breakdown</p>
+          <h1 className="text-3xl font-black tracking-tighter uppercase italic truncate max-w-[200px] sm:max-w-md">
+            {displayName}'s <span className="text-barclays-cyan">Picks</span>
+          </h1>
+          <span className="text-xs text-gray-300 font-bold tracking-widest uppercase mt-1 block">
+            Season Breakdown
+          </span>
         </div>
-        
-        <div className="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl text-center shadow-sm">
-          <span className="block text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Points</span>
-          <span className="text-2xl font-extrabold text-indigo-700">{totalPoints}</span>
+        <Link href="/leaderboard" className="text-xs font-bold uppercase tracking-widest text-barclays-cyan hover:text-white transition shrink-0">
+          ◀ BACK
+        </Link>
+      </div>
+
+      {/* Summary Stat Bar */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-white border-2 border-gray-300 p-4 text-center shadow-sm">
+          <span className="block text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Goals</span>
+          <span className="text-3xl font-black text-barclays-dark">{totalGoals}</span>
+        </div>
+        <div className="bg-white border-2 border-barclays-blue p-4 text-center shadow-sm border-b-4">
+          <span className="block text-[10px] sm:text-xs font-black text-barclays-blue uppercase tracking-widest mb-1">Total Points</span>
+          <span className="text-3xl font-black text-barclays-dark">{totalPoints}</span>
         </div>
       </div>
 
       {/* Picks List */}
       <div className="space-y-4">
         {breakdown.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
-            This user hasn't made any picks yet!
+          <div className="bg-white border-2 border-gray-300 p-8 text-center font-bold text-gray-500 uppercase tracking-widest">
+            NO PICKS RECORDED YET
           </div>
         ) : (
           breakdown.map(pick => (
-            <div key={pick._id.toString()} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-200 transition">
-              
-              {/* Match Info */}
-              <div>
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                  Gameweek {pick.gameweek}
-                </span>
-                <div className="font-semibold text-gray-800">
-                  {pick.matchTeamA} vs {pick.matchTeamB}
-                </div>
-              </div>
+            <div key={pick._id.toString()} className="bg-white border-2 border-gray-300 shadow-sm relative group hover:border-barclays-cyan transition">
+              {/* Cyan Accent Top Bar */}
+              <div className="h-1 w-full bg-gray-300 group-hover:bg-barclays-cyan transition-colors"></div>
 
-              {/* Player Selected */}
-              <div className="md:text-right">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                  Selected Player
-                </span>
-                <div className="font-bold text-indigo-900">
-                  {pick.playerName} <span className="text-gray-400 font-normal text-sm">({pick.playerTeam})</span>
-                </div>
-              </div>
-
-{/* Goal Outcome */}
-                  <div className="shrink-0">
-                    {!pick.isFinished ? (
-                      <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap">
-                        Pending
-                      </span>
-                    ) : pick.goalsScored > 0 ? (
-                      <span className="bg-green-100 text-green-700 text-sm font-extrabold px-4 py-2 rounded-lg shadow-sm whitespace-nowrap flex items-center gap-1">
-                        {pick.goalsScored} ⚽ ({pick.points} pts)
-                      </span>
-                    ) : (
-                      <span className="bg-red-50 text-red-500 text-sm font-bold px-4 py-2 rounded-lg whitespace-nowrap">
-                        0 pts
-                      </span>
-                    )}
+              <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                
+                {/* Match Info */}
+                <div className="flex-1">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
+                    Gameweek {pick.gameweek}
+                  </span>
+                  <div className="font-black text-barclays-dark uppercase text-sm">
+                    {pick.matchTeamA} <span className="text-barclays-cyan mx-1">v</span> {pick.matchTeamB}
                   </div>
+                </div>
 
+                {/* Player Selected */}
+                <div className="flex-1 md:text-center border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
+                    Selected Scorer
+                  </span>
+                  <div className="font-black text-barclays-blue uppercase tracking-wide text-sm sm:text-base">
+                    {pick.playerName}
+                  </div>
+                  <div className="text-xs font-bold text-gray-500 uppercase">
+                    {pick.playerTeam}
+                  </div>
+                </div>
+
+                {/* Goal Outcome Status */}
+                <div className="shrink-0 flex items-center md:justify-end border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 min-w-[140px]">
+                  {!pick.isFinished ? (
+                    <span className="bg-gray-200 text-gray-500 text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
+                      PENDING
+                    </span>
+                  ) : pick.goalsScored > 0 ? (
+                    <span className="bg-gradient-to-b from-barclays-blue to-barclays-dark text-white text-xs sm:text-sm font-black uppercase tracking-wider px-4 py-2 border-b-2 border-barclays-cyan w-full text-center shadow-sm">
+                      {pick.goalsScored} GLS / {pick.points} PTS
+                    </span>
+                  ) : (
+                    <span className="bg-red-600 text-white text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
+                      BLANK <span className="hidden sm:inline">(0 PTS)</span>
+                    </span>
+                  )}
+                </div>
+
+              </div>
             </div>
           ))
         )}
