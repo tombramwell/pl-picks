@@ -236,9 +236,14 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
             <span className="text-barclays-cyan mx-2">v</span>
             <span className="text-base">{match.teamB}</span>
             
-            <span suppressHydrationWarning className="text-xs text-gray-500 font-bold block sm:inline sm:ml-4 bg-gray-100 px-2 py-1">
+<span suppressHydrationWarning className="text-xs text-gray-500 font-bold block sm:inline sm:ml-4 bg-gray-100 px-2 py-1">
               {kickoffTime.toLocaleString('en-GB', {
-                weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                weekday: 'short', 
+                day: 'numeric', 
+                month: 'short', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Europe/London' // <--- Forces UK Time (accounts for BST automatically)
               })}
             </span>
           </div>
