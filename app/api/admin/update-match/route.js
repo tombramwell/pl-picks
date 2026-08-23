@@ -13,7 +13,8 @@ export async function POST(req) {
     await Match.findByIdAndUpdate(matchId, {
       isFinished,
       scoreTeamA,
-      scoreTeamB
+      scoreTeamB,
+      playerGoals
     });
 
     // 2. Fetch all user Picks for this specific match

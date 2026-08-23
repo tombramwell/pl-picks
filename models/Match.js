@@ -6,6 +6,9 @@ const MatchSchema = new mongoose.Schema({
   teamA: { type: String, required: true },
   teamB: { type: String, required: true },
   kickoffTime: { type: Date, required: true },
+  scoreTeamA: { type: Number, default: null },
+  scoreTeamB: { type: Number, default: null },
+  playerGoals: { type: Object, default: {} },
   isFinished: { type: Boolean, default: false }
 });
 

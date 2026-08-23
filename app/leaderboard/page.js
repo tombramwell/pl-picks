@@ -74,13 +74,6 @@ export default async function LeaderboardPage(props) {
         </Link>
       </div>
 
-      {/* Mobile Swipe Hint */}
-      <div className="md:hidden flex justify-end mb-2">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1.5 border border-gray-200">
-          👈 Swipe for full stats 👉
-        </span>
-      </div>
-
       {/* Standings Table */}
       <div className="bg-white border-2 border-gray-300 shadow-lg overflow-x-auto relative">
         <table className="w-full text-left border-collapse whitespace-nowrap">

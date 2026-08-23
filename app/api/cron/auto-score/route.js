@@ -104,15 +104,20 @@ export async function GET(request) {
           scoreTeamB = matchDetail.teams[0].score || 0;
       }
 
-      // Step C: Extract Goalscorers!
-      // 'goals' is an array. 'type' -> G (Goal), P (Penalty), O (Own Goal)
+// Step C: Extract Goalscorers!
       const playerGoals = {};
       
-      if (matchDetail.goals && Array.isArray(matchDetail.goals)) {
-        for (const goal of matchDetail.goals) {
-          // We exclude Own Goals ('O') as they don't count in fantasy
-          if (goal.type !== 'O' && goal.personId) {
-             const plId = String(goal.personId);
+      // PulseLive holds official 'goals' until full-time. 
+      // During live matches, they broadcast them in the 'events' timeline.
+      const liveEvents = (matchDetail.goals && matchDetail.goals.length > 0) 
+        ? matchDetail.goals 
+        : (matchDetail.events || []);
+      
+      if (Array.isArray(liveEvents)) {
+        for (const item of liveEvents) {
+          // 'G' = Goal, 'P' = Penalty (we ignore 'O' = Own Goal)
+          if ((item.type === 'G' || item.type === 'P') && item.personId) {
+             const plId = String(item.personId);
              
              // Convert the PulseLive ID to our Database Player ID
              const player = await Player.findOne({ plId });
@@ -131,7 +136,8 @@ export async function GET(request) {
       await Match.findByIdAndUpdate(dbMatch._id, {
         isFinished,
         scoreTeamA,
-        scoreTeamB
+        scoreTeamB,
+        playerGoals
       });
 
       const picks = await Pick.find({ matchId: dbMatch._id });
