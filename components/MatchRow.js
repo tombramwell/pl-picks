@@ -43,9 +43,11 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
     countdownString += `${minutes}m`;
   }
 
-  // LINE-UPS LOGIC
+// LINE-UPS LOGIC
   const lineupA = match.teamALineup || [];
   const lineupB = match.teamBLineup || [];
+  const benchA = match.teamABench || [];  // NEW
+  const benchB = match.teamBBench || [];  // NEW
   const lineupsAnnounced = lineupA.length > 0 || lineupB.length > 0;
 
   const sortedTeamA = [...teamAPlayers].sort((a, b) => (a.squadNumber || 99) - (b.squadNumber || 99));
@@ -212,9 +214,11 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
               {sortedTeamA.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
                 
-                let lineupStatus = '';
+let lineupStatus = '';
                 if (lineupA.length > 0) {
-                  lineupStatus = lineupA.includes(p._id) ? '✅ ' : '🪑 ';
+                  if (lineupA.includes(p._id)) lineupStatus = '✅ ';
+                  else if (benchA.includes(p._id)) lineupStatus = '🪑 ';
+                  else lineupStatus = '❌ ';
                 }
 
                 return (
@@ -229,9 +233,11 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
               {sortedTeamB.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
                 
-                let lineupStatus = '';
-                if (lineupB.length > 0) {
-                  lineupStatus = lineupB.includes(p._id) ? '✅ ' : '🪑 ';
+let lineupStatus = '';
+                if (lineupA.length > 0) {
+                  if (lineupA.includes(p._id)) lineupStatus = '✅ ';
+                  else if (benchA.includes(p._id)) lineupStatus = '🪑 ';
+                  else lineupStatus = '❌ ';
                 }
 
                 return (

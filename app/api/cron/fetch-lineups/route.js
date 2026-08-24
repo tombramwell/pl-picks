@@ -77,16 +77,41 @@ export async function GET(request) {
       // Check if teamLists (lineups) exist yet
       if (matchDetail.teamLists && matchDetail.teamLists.length === 2) {
         
-        const extractLineupIds = async (teamList) => {
-          if (!teamList || !teamList.lineup) return [];
-          const pulseIds = teamList.lineup.map(player => String(player.id));
-          // Look up these players in our DB to get their MongoDB _ids
+// A reusable function to extract player IDs from either the lineup or substitutes array
+        const extractPlayerIds = async (playerList) => {
+          if (!playerList) return [];
+          const pulseIds = playerList.map(player => String(player.id));
           const dbPlayers = await Player.find({ plId: { $in: pulseIds } }).lean();
           return dbPlayers.map(p => p._id.toString());
         };
 
-        let teamALineup = [];
-        let teamBLineup = [];
+        let teamALineup = [], teamBLineup = [];
+        let teamABench = [], teamBBench = [];
+
+        // Safely determine which array belongs to which team
+        if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
+
+        if (normalizeTeamName(matchDetail.teams[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
+            teamALineup = await extractPlayerIds(matchDetail.teamLists[0].lineup);
+            teamABench = await extractPlayerIds(matchDetail.teamLists[0].substitutes);
+            
+            teamBLineup = await extractPlayerIds(matchDetail.teamLists[1].lineup);
+            teamBBench = await extractPlayerIds(matchDetail.teamLists[1].substitutes);
+        } else {
+            teamALineup = await extractPlayerIds(matchDetail.teamLists[1].lineup);
+            teamABench = await extractPlayerIds(matchDetail.teamLists[1].substitutes);
+            
+            teamBLineup = await extractPlayerIds(matchDetail.teamLists[0].lineup);
+            teamBBench = await extractPlayerIds(matchDetail.teamLists[0].substitutes);
+        }
+
+        // Only update if we actually found players
+        if (teamALineup.length > 0 || teamBLineup.length > 0) {
+          await Match.findByIdAndUpdate(dbMatch._id, { 
+            teamALineup, teamBLineup, teamABench, teamBBench 
+          });
+          updatedCount++;
+        }
 
 // Safely determine which array belongs to which team using the main 'teams' object
         if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
