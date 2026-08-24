@@ -88,8 +88,10 @@ export async function GET(request) {
         let teamALineup = [];
         let teamBLineup = [];
 
-        // Determine which array belongs to which team
-        if (normalizeTeamName(matchDetail.teamLists[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
+// Safely determine which array belongs to which team using the main 'teams' object
+        if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
+
+        if (normalizeTeamName(matchDetail.teams[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
             teamALineup = await extractLineupIds(matchDetail.teamLists[0]);
             teamBLineup = await extractLineupIds(matchDetail.teamLists[1]);
         } else {
