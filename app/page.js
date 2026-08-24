@@ -33,30 +33,24 @@ export default async function DashboardPage(props) {
   // Find all unique gameweeks in the database
   const allGameweeks = [...new Set(matches.map(m => m.gameweek))].sort((a, b) => a - b);
   
-  // -- SMART DEFAULT GAMEWEEK LOGIC --
-  // Step A: Find the first gameweek that has an unfinished match
-  const firstUnfinishedMatch = matches.find(m => !m.isFinished);
-  let defaultGw = firstUnfinishedMatch ? firstUnfinishedMatch.gameweek : (allGameweeks[allGameweeks.length - 1] || 1);
+  // -- SMART MIDNIGHT CUTOFF LOGIC --
+  let defaultGw = allGameweeks[allGameweeks.length - 1] || 1; // Default to the last GW if season is over
 
-  // Step B: Linger on the previous gameweek if it recently finished
-  if (defaultGw > 1) {
-    const prevGwMatches = matches.filter(m => m.gameweek === defaultGw - 1);
-    if (prevGwMatches.length > 0) {
-      // Get the last match of the previous gameweek
-      const lastMatchPrevGw = prevGwMatches[prevGwMatches.length - 1]; 
-      
-      // Calculate hours since that match kicked off
-      const hoursSinceLastKickoff = (now.getTime() - new Date(lastMatchPrevGw.kickoffTime).getTime()) / (1000 * 60 * 60);
-      
-      // Find the first match of the upcoming gameweek
-      const nextMatch = matches.find(m => m.gameweek === defaultGw);
-      const nextMatchHasStarted = nextMatch && new Date(nextMatch.kickoffTime) <= now;
+  for (const gw of allGameweeks) {
+    const gwMatches = matches.filter(m => m.gameweek === gw);
+    if (gwMatches.length === 0) continue;
 
-      // If the last match of the previous GW kicked off less than 36 hours ago, 
-      // AND the next gameweek hasn't started yet, linger on the previous one!
-      if (hoursSinceLastKickoff < 36 && !nextMatchHasStarted) {
-        defaultGw = defaultGw - 1;
-      }
+    // The matches are pre-sorted chronologically, so the last one is the final match of the Gameweek
+    const lastMatch = gwMatches[gwMatches.length - 1]; 
+    
+    // Calculate 11:59:59 PM on the day of that final match
+    const cutoffTime = new Date(lastMatch.kickoffTime);
+    cutoffTime.setHours(23, 59, 59, 999); 
+
+    // If we haven't reached midnight on the day of the final match, this is our active gameweek!
+    if (now <= cutoffTime) {
+      defaultGw = gw;
+      break;
     }
   }
 
