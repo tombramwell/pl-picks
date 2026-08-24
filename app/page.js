@@ -18,9 +18,9 @@ export default async function DashboardPage(props) {
   await dbConnect();
 
   const normalizeTeamName = (teamName) => {
-  if (!teamName) return '';
-  return teamName.toLowerCase().replace(' & ', ' and ').trim();
-};
+    if (!teamName) return '';
+    return teamName.toLowerCase().replace(' & ', ' and ').trim();
+  };
 
   // 2. Fetch Data
   const matches = await Match.find().sort({ kickoffTime: 1 }).lean();
@@ -30,25 +30,43 @@ export default async function DashboardPage(props) {
   // 3. Process Gameweeks & Deadlines
   const now = new Date();
   
-  // Find all unique gameweeks
+  // Find all unique gameweeks in the database
   const allGameweeks = [...new Set(matches.map(m => m.gameweek))].sort((a, b) => a - b);
   
-  // A Gameweek is only "active" if it has at least ONE match that hasn't kicked off yet
-  const activeGameweeks = allGameweeks.filter(gw => {
-    const gwMatches = matches.filter(m => m.gameweek === gw);
-    return gwMatches.some(m => new Date(m.kickoffTime) > now);
-  });
+  // -- SMART DEFAULT GAMEWEEK LOGIC --
+  // Step A: Find the first gameweek that has an unfinished match
+  const firstUnfinishedMatch = matches.find(m => !m.isFinished);
+  let defaultGw = firstUnfinishedMatch ? firstUnfinishedMatch.gameweek : (allGameweeks[allGameweeks.length - 1] || 1);
+
+  // Step B: Linger on the previous gameweek if it recently finished
+  if (defaultGw > 1) {
+    const prevGwMatches = matches.filter(m => m.gameweek === defaultGw - 1);
+    if (prevGwMatches.length > 0) {
+      // Get the last match of the previous gameweek
+      const lastMatchPrevGw = prevGwMatches[prevGwMatches.length - 1]; 
+      
+      // Calculate hours since that match kicked off
+      const hoursSinceLastKickoff = (now.getTime() - new Date(lastMatchPrevGw.kickoffTime).getTime()) / (1000 * 60 * 60);
+      
+      // Find the first match of the upcoming gameweek
+      const nextMatch = matches.find(m => m.gameweek === defaultGw);
+      const nextMatchHasStarted = nextMatch && new Date(nextMatch.kickoffTime) <= now;
+
+      // If the last match of the previous GW kicked off less than 36 hours ago, 
+      // AND the next gameweek hasn't started yet, linger on the previous one!
+      if (hoursSinceLastKickoff < 36 && !nextMatchHasStarted) {
+        defaultGw = defaultGw - 1;
+      }
+    }
+  }
 
   // 4. Determine which Gameweek to show
   // Await searchParams for Next.js 15 compatibility
   const searchParams = await props.searchParams;
   const requestedGw = parseInt(searchParams?.gw);
   
-  // Default to the earliest active gameweek. If season is over, show the last gameweek.
-  const defaultGw = activeGameweeks.length > 0 ? activeGameweeks[0] : (allGameweeks[allGameweeks.length - 1] || 1);
-  
-  // Only allow viewing active gameweeks via URL. Otherwise, force default.
-  const selectedGw = (requestedGw && activeGameweeks.includes(requestedGw)) ? requestedGw : defaultGw;
+  // Allow viewing ANY gameweek that exists in the database
+  const selectedGw = (requestedGw && allGameweeks.includes(requestedGw)) ? requestedGw : defaultGw;
 
   // 5. Filter matches for the selected Gameweek
   const displayMatches = matches.filter(m => m.gameweek === selectedGw);
@@ -80,7 +98,7 @@ export default async function DashboardPage(props) {
     };
   });
 
-const playersByTeam = {};
+  const playersByTeam = {};
   players.forEach(p => {
     const normalizedTeam = normalizeTeamName(p.team);
     if (!playersByTeam[normalizedTeam]) playersByTeam[normalizedTeam] = [];
@@ -112,7 +130,7 @@ const playersByTeam = {};
             </span>
           </div>
           
-<div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+          <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
             <Link 
               href="/rules" 
               className="text-sm text-barclays-cyan hover:text-white uppercase font-bold tracking-wider"
@@ -136,9 +154,9 @@ const playersByTeam = {};
       </div>
 
       {/* Gameweek Tab Selector */}
-      {activeGameweeks.length > 0 ? (
+      {allGameweeks.length > 0 ? (
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
-          {activeGameweeks.map(gw => (
+          {allGameweeks.map(gw => (
             <Link 
               key={gw} 
               href={`/?gw=${gw}`}
@@ -154,7 +172,7 @@ const playersByTeam = {};
         </div>
       ) : (
         <div className="bg-white border-2 border-red-500 p-4 mb-6 text-center font-bold text-red-600 uppercase tracking-widest">
-          No Active Gameweeks Available
+          No Gameweeks Available
         </div>
       )}
 
