@@ -85,24 +85,26 @@ export async function GET(request) {
           return dbPlayers.map(p => p._id.toString());
         };
 
-        let teamALineup = [], teamBLineup = [];
+let teamALineup = [], teamBLineup = [];
         let teamABench = [], teamBBench = [];
 
-        // Safely determine which array belongs to which team
+        // 1. Safety Check: Ensure BOTH teams and teamLists exist before proceeding
         if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
+        if (!matchDetail.teamLists || matchDetail.teamLists.length < 2) continue;
 
+        // 2. Optional Chaining (?.) protects against missing lineup/sub arrays during warm-up edits
         if (normalizeTeamName(matchDetail.teams[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
-            teamALineup = await extractPlayerIds(matchDetail.teamLists[0].lineup);
-            teamABench = await extractPlayerIds(matchDetail.teamLists[0].substitutes);
+            teamALineup = await extractPlayerIds(matchDetail.teamLists[0]?.lineup);
+            teamABench = await extractPlayerIds(matchDetail.teamLists[0]?.substitutes);
             
-            teamBLineup = await extractPlayerIds(matchDetail.teamLists[1].lineup);
-            teamBBench = await extractPlayerIds(matchDetail.teamLists[1].substitutes);
+            teamBLineup = await extractPlayerIds(matchDetail.teamLists[1]?.lineup);
+            teamBBench = await extractPlayerIds(matchDetail.teamLists[1]?.substitutes);
         } else {
-            teamALineup = await extractPlayerIds(matchDetail.teamLists[1].lineup);
-            teamABench = await extractPlayerIds(matchDetail.teamLists[1].substitutes);
+            teamALineup = await extractPlayerIds(matchDetail.teamLists[1]?.lineup);
+            teamABench = await extractPlayerIds(matchDetail.teamLists[1]?.substitutes);
             
-            teamBLineup = await extractPlayerIds(matchDetail.teamLists[0].lineup);
-            teamBBench = await extractPlayerIds(matchDetail.teamLists[0].substitutes);
+            teamBLineup = await extractPlayerIds(matchDetail.teamLists[0]?.lineup);
+            teamBBench = await extractPlayerIds(matchDetail.teamLists[0]?.substitutes);
         }
 
         // Only update if we actually found players
