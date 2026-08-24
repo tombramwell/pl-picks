@@ -234,9 +234,9 @@ let lineupStatus = '';
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
                 
 let lineupStatus = '';
-                if (lineupA.length > 0) {
-                  if (lineupA.includes(p._id)) lineupStatus = '✅ ';
-                  else if (benchA.includes(p._id)) lineupStatus = '🪑 ';
+                if (lineupB.length > 0) {
+                  if (lineupB.includes(p._id)) lineupStatus = '✅ ';
+                  else if (benchB.includes(p._id)) lineupStatus = '🪑 ';
                   else lineupStatus = '❌ ';
                 }
 
