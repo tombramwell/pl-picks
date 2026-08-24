@@ -9,7 +9,9 @@ const MatchSchema = new mongoose.Schema({
   scoreTeamA: { type: Number, default: null },
   scoreTeamB: { type: Number, default: null },
   playerGoals: { type: Object, default: {} },
-  isFinished: { type: Boolean, default: false }
+  isFinished: { type: Boolean, default: false },
+  teamALineup: [{ type: String }],
+  teamBLineup: [{ type: String }]
 });
 
 export default mongoose.models.Match || mongoose.model('Match', MatchSchema);

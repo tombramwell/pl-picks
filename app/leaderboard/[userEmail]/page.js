@@ -1,15 +1,25 @@
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Pick from '@/models/Pick';
 import Match from '@/models/Match';
 import Link from 'next/link';
 
 export default async function UserBreakdownPage(props) {
+  // Get the current logged-in user
+  const session = await getServerSession(authOptions);
+  const currentUserEmail = session?.user?.email;
+
   // In Next.js App Router, params must be awaited
   const params = await props.params;
   const decodedEmail = decodeURIComponent(params.userEmail);
   const displayName = decodedEmail.split('@')[0];
 
+  // Check if the user is looking at their own profile
+  const isOwnProfile = currentUserEmail === decodedEmail;
+
   await dbConnect();
+  const now = new Date();
 
   // 1. Fetch all picks made by this user
   const picks = await Pick.find({ userId: decodedEmail }).lean();
@@ -18,14 +28,17 @@ export default async function UserBreakdownPage(props) {
   const matchIds = picks.map(p => p.matchId);
   const matches = await Match.find({ _id: { $in: matchIds } }).lean();
 
-  // 3. Combine the data and sort by Gameweek
+  // 3. Combine the data, check lock status, and sort by Gameweek
   const breakdown = picks.map(pick => {
     const match = matches.find(m => m._id.toString() === pick.matchId.toString());
+    const isLocked = match ? new Date(match.kickoffTime) <= now : false;
+
     return {
       ...pick,
       matchTeamA: match?.teamA || 'Unknown',
       matchTeamB: match?.teamB || 'Unknown',
-      isFinished: match?.isFinished || false
+      isFinished: match?.isFinished || false,
+      isLocked
     };
   }).sort((a, b) => a.gameweek - b.gameweek);
 
@@ -69,56 +82,71 @@ export default async function UserBreakdownPage(props) {
             NO PICKS RECORDED YET
           </div>
         ) : (
-          breakdown.map(pick => (
-            <div key={pick._id.toString()} className="bg-white border-2 border-gray-300 shadow-sm relative group hover:border-barclays-cyan transition">
-              {/* Cyan Accent Top Bar */}
-              <div className="h-1 w-full bg-gray-300 group-hover:bg-barclays-cyan transition-colors"></div>
+          breakdown.map(pick => {
+            // Determine if we should reveal this pick
+            const showPick = isOwnProfile || pick.isLocked;
 
-              <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
-                
-                {/* Match Info */}
-                <div className="flex-1">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
-                    Gameweek {pick.gameweek}
-                  </span>
-                  <div className="font-black text-barclays-dark uppercase text-sm">
-                    {pick.matchTeamA} <span className="text-barclays-cyan mx-1">v</span> {pick.matchTeamB}
-                  </div>
-                </div>
+            return (
+              <div key={pick._id.toString()} className="bg-white border-2 border-gray-300 shadow-sm relative group hover:border-barclays-cyan transition">
+                {/* Cyan Accent Top Bar */}
+                <div className="h-1 w-full bg-gray-300 group-hover:bg-barclays-cyan transition-colors"></div>
 
-                {/* Player Selected */}
-                <div className="flex-1 md:text-center border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
-                    Selected Scorer
-                  </span>
-                  <div className="font-black text-barclays-blue uppercase tracking-wide text-sm sm:text-base">
-                    {pick.playerName}
-                  </div>
-                  <div className="text-xs font-bold text-gray-500 uppercase">
-                    {pick.playerTeam}
-                  </div>
-                </div>
-
-                {/* Goal Outcome Status */}
-                <div className="shrink-0 flex items-center md:justify-end border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 min-w-[140px]">
-                  {!pick.isFinished ? (
-                    <span className="bg-gray-200 text-gray-500 text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
-                      PENDING
+                <div className="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                  
+                  {/* Match Info */}
+                  <div className="flex-1">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
+                      Gameweek {pick.gameweek}
                     </span>
-                  ) : pick.goalsScored > 0 ? (
-                    <span className="bg-gradient-to-b from-barclays-blue to-barclays-dark text-white text-xs sm:text-sm font-black uppercase tracking-wider px-4 py-2 border-b-2 border-barclays-cyan w-full text-center shadow-sm">
-                      {pick.goalsScored} GLS / {pick.points} PTS
-                    </span>
-                  ) : (
-                    <span className="bg-red-600 text-white text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
-                      BLANK <span className="hidden sm:inline">(0 PTS)</span>
-                    </span>
-                  )}
-                </div>
+                    <div className="font-black text-barclays-dark uppercase text-sm">
+                      {pick.matchTeamA} <span className="text-barclays-cyan mx-1">v</span> {pick.matchTeamB}
+                    </div>
+                  </div>
 
+                  {/* Player Selected (Hidden Logic Applied Here) */}
+                  <div className="flex-1 md:text-center border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-4">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">
+                      Selected Scorer
+                    </span>
+                    {showPick ? (
+                      <>
+                        <div className="font-black text-barclays-blue uppercase tracking-wide text-sm sm:text-base">
+                          {pick.playerName}
+                        </div>
+                        <div className="text-xs font-bold text-gray-500 uppercase">
+                          {pick.playerTeam}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-1">
+                        <span className="bg-gray-200 text-gray-600 font-black uppercase tracking-widest text-xs px-3 py-1 inline-flex items-center gap-1 shadow-sm border border-gray-300">
+                          🔒 HIDDEN
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Goal Outcome Status */}
+                  <div className="shrink-0 flex items-center md:justify-end border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 min-w-[140px]">
+                    {!pick.isFinished ? (
+                      <span className="bg-gray-200 text-gray-500 text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
+                        PENDING
+                      </span>
+                    ) : pick.goalsScored > 0 ? (
+                      <span className="bg-gradient-to-b from-barclays-blue to-barclays-dark text-white text-xs sm:text-sm font-black uppercase tracking-wider px-4 py-2 border-b-2 border-barclays-cyan w-full text-center shadow-sm">
+                        {pick.goalsScored} GLS / {pick.points} PTS
+                      </span>
+                    ) : (
+                      <span className="bg-red-600 text-white text-xs font-black uppercase tracking-widest px-4 py-2 w-full text-center">
+                        BLANK <span className="hidden sm:inline">(0 PTS)</span>
+                      </span>
+                    )}
+                  </div>
+
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </main>

@@ -43,6 +43,11 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
     countdownString += `${minutes}m`;
   }
 
+  // LINE-UPS LOGIC
+  const lineupA = match.teamALineup || [];
+  const lineupB = match.teamBLineup || [];
+  const lineupsAnnounced = lineupA.length > 0 || lineupB.length > 0;
+
   const sortedTeamA = [...teamAPlayers].sort((a, b) => (a.squadNumber || 99) - (b.squadNumber || 99));
   const sortedTeamB = [...teamBPlayers].sort((a, b) => (a.squadNumber || 99) - (b.squadNumber || 99));
   const allMatchPlayers = [...sortedTeamA, ...sortedTeamB];
@@ -84,9 +89,18 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
   const handleRollDice = () => {
     if (isLocked || loading) return;
 
-    const availablePlayers = allMatchPlayers.filter(
+    // Filter available players
+    // If lineups are out, strictly prefer players who are starting!
+    let availablePlayers = allMatchPlayers.filter(
       p => !usedPlayerIds.includes(p._id) || p._id === savedPick?.playerId
     );
+
+    if (lineupsAnnounced) {
+      const startingAvailablePlayers = availablePlayers.filter(p => lineupA.includes(p._id) || lineupB.includes(p._id));
+      if (startingAvailablePlayers.length > 0) {
+        availablePlayers = startingAvailablePlayers;
+      }
+    }
 
     if (availablePlayers.length === 0) {
       alert('No available players left for this match!');
@@ -128,7 +142,7 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
               </span>
             </div>
 
-            {/* NEW: Real-Life Goalscorers List */}
+            {/* Real-Life Goalscorers List */}
             {match.playerGoals && Object.keys(match.playerGoals).length > 0 && (
               <div className="mt-3 flex flex-wrap gap-3">
                 {Object.entries(match.playerGoals)
@@ -147,6 +161,13 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
           </div>
 
           <div className="flex items-center space-x-2 mt-2 sm:mt-0 shrink-0">
+            {/* NEW: Line-ups Out Badge */}
+            {lineupsAnnounced && !isLocked && !match.isFinished && (
+              <span className="text-xs font-black uppercase tracking-wider bg-barclays-cyan text-barclays-dark px-2 py-1.5 shadow-sm border border-[#00d0e6] animate-pulse">
+                📋 TEAMSHEETS OUT
+              </span>
+            )}
+
             {!isLocked && (
               <button
                 onClick={handleRollDice}
@@ -186,22 +207,36 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
             className="flex-1 p-2 border-2 border-gray-300 text-sm font-bold text-barclays-dark bg-gray-50 focus:bg-white focus:border-barclays-cyan outline-none disabled:bg-gray-200 disabled:text-gray-400 uppercase"
           >
             <option value="">-- SELECT SCORER --</option>
+            
             <optgroup label={`--- ${match.teamA} ---`}>
               {sortedTeamA.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
+                
+                let lineupStatus = '';
+                if (lineupA.length > 0) {
+                  lineupStatus = lineupA.includes(p._id) ? '✅ ' : '🪑 ';
+                }
+
                 return (
                   <option key={p._id} value={p._id} disabled={isUsedElsewhere}>
-                    {p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
+                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
                   </option>
                 );
               })}
             </optgroup>
+            
             <optgroup label={`--- ${match.teamB} ---`}>
               {sortedTeamB.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
+                
+                let lineupStatus = '';
+                if (lineupB.length > 0) {
+                  lineupStatus = lineupB.includes(p._id) ? '✅ ' : '🪑 ';
+                }
+
                 return (
                   <option key={p._id} value={p._id} disabled={isUsedElsewhere}>
-                    {p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
+                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
                   </option>
                 );
               })}
