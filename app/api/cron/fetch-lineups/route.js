@@ -77,7 +77,7 @@ export async function GET(request) {
       // Check if teamLists (lineups) exist yet
       if (matchDetail.teamLists && matchDetail.teamLists.length === 2) {
         
-// A reusable function to extract player IDs from either the lineup or substitutes array
+        // A reusable function to extract player IDs from either the lineup or substitutes array
         const extractPlayerIds = async (playerList) => {
           if (!playerList) return [];
           const pulseIds = playerList.map(player => String(player.id));
@@ -85,13 +85,12 @@ export async function GET(request) {
           return dbPlayers.map(p => p._id.toString());
         };
 
-let teamALineup = [], teamBLineup = [];
+        let teamALineup = [], teamBLineup = [];
         let teamABench = [], teamBBench = [];
 
         // 1. Safety Check: Ensure BOTH teams and teamLists exist before proceeding
         if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
-        if (!matchDetail.teamLists || matchDetail.teamLists.length < 2) continue;
-
+        
         // 2. Optional Chaining (?.) protects against missing lineup/sub arrays during warm-up edits
         if (normalizeTeamName(matchDetail.teams[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
             teamALineup = await extractPlayerIds(matchDetail.teamLists[0]?.lineup);
@@ -112,23 +111,6 @@ let teamALineup = [], teamBLineup = [];
           await Match.findByIdAndUpdate(dbMatch._id, { 
             teamALineup, teamBLineup, teamABench, teamBBench 
           });
-          updatedCount++;
-        }
-
-// Safely determine which array belongs to which team using the main 'teams' object
-        if (!matchDetail.teams || matchDetail.teams.length < 2) continue;
-
-        if (normalizeTeamName(matchDetail.teams[0].team.name) === normalizeTeamName(dbMatch.teamA)) {
-            teamALineup = await extractLineupIds(matchDetail.teamLists[0]);
-            teamBLineup = await extractLineupIds(matchDetail.teamLists[1]);
-        } else {
-            teamALineup = await extractLineupIds(matchDetail.teamLists[1]);
-            teamBLineup = await extractLineupIds(matchDetail.teamLists[0]);
-        }
-
-        // Only update if we actually found 11 players for at least one team
-        if (teamALineup.length > 0 || teamBLineup.length > 0) {
-          await Match.findByIdAndUpdate(dbMatch._id, { teamALineup, teamBLineup });
           updatedCount++;
         }
       }
