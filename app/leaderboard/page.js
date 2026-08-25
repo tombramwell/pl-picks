@@ -31,7 +31,7 @@ export default async function LeaderboardPage(props) {
         totalPicksMade: { $sum: 1 }
       }
     },
-    { $sort: { totalPoints: -1, totalGoals: -1 } }
+    { $sort: { totalPoints: -1, totalGoals: -1, id: 1 } }
   ]);
 
   // Filter if looking at Prize Pot
@@ -92,13 +92,23 @@ export default async function LeaderboardPage(props) {
           </thead>
           <tbody className="text-xs md:text-sm font-bold uppercase text-gray-800">
             {leaderboardData.map((row, index) => {
-              const rank = index + 1;
+              const rank = leaderboardData.findIndex(
+                r => r.totalPoints === row.totalPoints && r.totalGoals === row.totalGoals
+              ) + 1;
               const isCurrentUser = row._id === currentUserEmail;
 
               return (
                 <tr key={row._id} className={`border-b border-gray-200 transition ${isCurrentUser ? 'bg-barclays-cyan bg-opacity-20' : 'bg-white hover:bg-blue-50'}`}>
-                  <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 text-gray-500 font-black">{rank}</td>
-                  
+                  <td className="py-3 px-2 md:px-6 text-center border-r border-gray-200 font-black">
+                    <span className={`inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full text-xs md:text-sm ${
+                      rank === 1 ? 'bg-yellow-400 text-black shadow-sm' : 
+                      rank === 2 ? 'bg-gray-300 text-gray-800 shadow-sm' : 
+                      rank === 3 ? 'bg-amber-600 text-white shadow-sm' : 
+                      'text-gray-500 bg-transparent'
+                    }`}>
+                      {rank}
+                    </span>
+                  </td>                  
                   <td className="py-3 px-3 md:px-6 border-r border-gray-200">
                     <Link href={`/leaderboard/${encodeURIComponent(row._id)}`} className="hover:text-barclays-blue hover:underline flex items-center gap-2">
                       {/* Truncate long emails on mobile so they don't force massive scrolling */}
