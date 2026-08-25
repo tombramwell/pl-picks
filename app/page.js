@@ -92,8 +92,15 @@ export default async function DashboardPage(props) {
     };
   });
 
-  const playersByTeam = {};
+const playersByTeam = {};
   players.forEach(p => {
+    // THE FIX: Strict Server-Side Filtering
+    // If the player is strictly marked inactive, we skip them...
+    // UNLESS the user has already used them in a pick, in which case we must keep them so historical data renders correctly!
+    if (p.isInactive === true && !usedPlayerIds.includes(p._id.toString())) {
+      return; 
+    }
+
     const normalizedTeam = normalizeTeamName(p.team);
     if (!playersByTeam[normalizedTeam]) playersByTeam[normalizedTeam] = [];
     playersByTeam[normalizedTeam].push({

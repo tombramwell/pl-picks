@@ -288,6 +288,18 @@ export default function AdminDashboard({ matches, players, managers }) {
       </div>
             </div>
           </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+        <Link 
+          href="/admin/players" 
+          className="bg-red-600 text-white font-black uppercase tracking-widest px-4 py-2 text-xs hover:bg-red-800 transition ml-2 border border-red-700 shadow-sm"
+        >
+          🚫 Hide Player
+        </Link>
+      </div>
+            </div>
+          </div>
 
 
       {/* MATCHES TAB (List View) */}
