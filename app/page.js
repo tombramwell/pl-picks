@@ -82,6 +82,18 @@ export default async function DashboardPage(props) {
   // Generate the locked player list based ONLY on the relevant half of the season
   const usedPlayerIds = relevantPicks.map(p => p.playerId.toString());
 
+  // -- CALCULATE PLAYER SEASON GOALS --
+  // Tally up every goal scored in the database so far using historical match data!
+  const playerSeasonGoals = {};
+  matches.forEach(m => {
+    if (m.playerGoals) {
+      Object.entries(m.playerGoals).forEach(([playerId, goals]) => {
+        if (!playerSeasonGoals[playerId]) playerSeasonGoals[playerId] = 0;
+        playerSeasonGoals[playerId] += goals;
+      });
+    }
+  });
+
   const userPicksMap = {};
   userPicks.forEach(pick => {
     userPicksMap[pick.matchId.toString()] = {
@@ -94,10 +106,7 @@ export default async function DashboardPage(props) {
 
 const playersByTeam = {};
   players.forEach(p => {
-    // THE FIX: Strict Server-Side Filtering
-    // If the player is strictly marked inactive, we skip them...
-    // UNLESS the user has already used them in a pick, in which case we must keep them so historical data renders correctly!
-    if (p.isInactive === true && !usedPlayerIds.includes(p._id.toString())) {
+      if (p.isInactive === true && !usedPlayerIds.includes(p._id.toString())) {
       return; 
     }
 
@@ -105,7 +114,8 @@ const playersByTeam = {};
     if (!playersByTeam[normalizedTeam]) playersByTeam[normalizedTeam] = [];
     playersByTeam[normalizedTeam].push({
       ...p,
-      _id: p._id.toString()
+      _id: p._id.toString(),
+      seasonGoals: playerSeasonGoals[p._id.toString()] || 0 
     });
   });
 
@@ -114,6 +124,15 @@ const playersByTeam = {};
     _id: m._id.toString(),
     kickoffTime: m.kickoffTime.toISOString()
   }));
+
+  // -- MISSING PICKS LOGIC --
+  // We only want to warn them about matches they haven't picked YET, 
+  // and only if the deadline for that match hasn't passed.
+  const missingPicksCount = displayMatches.filter(m => {
+    const hasPick = !!userPicksMap[m._id.toString()];
+    const isUpcoming = new Date(m.kickoffTime) > now;
+    return !hasPick && isUpcoming;
+  }).length;
 
   // 7. Render Retro Dashboard
   return (
@@ -183,10 +202,22 @@ const playersByTeam = {};
           Gameweek {selectedGw} Matches
         </h2>
         <div className="text-sm font-bold text-gray-500 uppercase hidden sm:block">
-          Select 1 Player Per Match
+          Selections remaining: {missingPicksCount} 
         </div>
       </div>
 
+      {/* MISSING PICKS WARNING BANNER
+      {missingPicksCount > 0 && (
+        <div className="bg-yellow-400 border-l-4 border-yellow-600 text-black p-4 mb-6 shadow-sm flex items-center justify-between font-black uppercase tracking-wider text-sm md:text-base animate-pulse shadow-yellow-200">
+          <span className="flex items-center gap-2">
+            <span className="text-xl hidden sm:inline">⚠️</span> 
+            <span>You have {missingPicksCount} upcoming match{missingPicksCount === 1 ? '' : 'es'} without a pick!</span>
+          </span>
+          <span className="text-xs bg-yellow-600 text-white px-3 py-1 ml-4 shadow-sm shrink-0">
+            ACTION REQUIRED
+          </span>
+        </div>
+      )} */}
       {/* Match Rows */}
       <div className="space-y-4">
         {serializedMatches.length > 0 ? (

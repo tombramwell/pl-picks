@@ -214,16 +214,18 @@ export default function MatchRow({ match, currentPick, teamAPlayers, teamBPlayer
               {sortedTeamA.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
                 
-let lineupStatus = '';
+                let lineupStatus = '';
                 if (lineupA.length > 0) {
                   if (lineupA.includes(p._id)) lineupStatus = '✅ ';
                   else if (benchA.includes(p._id)) lineupStatus = '🪑 ';
                   else lineupStatus = '❌ ';
                 }
 
+                const goalsText = p.seasonGoals > 0 ? ` - ${p.seasonGoals} Goal${p.seasonGoals > 1 ? 's' : ''}` : '';
+
                 return (
                   <option key={p._id} value={p._id} disabled={isUsedElsewhere}>
-                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
+                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}){goalsText} {isUsedElsewhere ? '[USED]' : ''}
                   </option>
                 );
               })}
@@ -233,16 +235,18 @@ let lineupStatus = '';
               {sortedTeamB.map(p => {
                 const isUsedElsewhere = usedPlayerIds.includes(p._id) && p._id !== savedPick?.playerId;
                 
-let lineupStatus = '';
+                let lineupStatus = '';
                 if (lineupB.length > 0) {
                   if (lineupB.includes(p._id)) lineupStatus = '✅ ';
                   else if (benchB.includes(p._id)) lineupStatus = '🪑 ';
                   else lineupStatus = '❌ ';
                 }
 
+                const goalsText = p.seasonGoals > 0 ? ` - ${p.seasonGoals} Goal${p.seasonGoals > 1 ? 's' : ''}` : '';
+
                 return (
                   <option key={p._id} value={p._id} disabled={isUsedElsewhere}>
-                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}) {isUsedElsewhere ? '[USED]' : ''}
+                    {lineupStatus}{p.squadNumber || '?'}. {p.name} ({p.position}){goalsText} {isUsedElsewhere ? '[USED]' : ''}
                   </option>
                 );
               })}
