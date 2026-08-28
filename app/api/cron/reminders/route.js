@@ -3,7 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import { Resend } from 'resend';
 import Match from '@/models/Match';
 import Pick from '@/models/Pick';
-import Entrant from '@/models/Entrant'; 
+import Entrant from '@/models/Entrant';
+import Unsubscriber from '@/models/Unsubscriber';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -31,7 +32,15 @@ export async function GET(request) {
     const matchIds = gwMatches.map(m => m._id.toString());
 
 // 3. Get all active managers (Anyone who has ever made a pick!)
-    const uniqueEmails = await Pick.distinct('userId');
+    const allEmails = await Pick.distinct('userId');
+    
+    // Grab the blacklist
+    const unsubscribedDocs = await Unsubscriber.find().lean();
+    const blacklistedEmails = unsubscribedDocs.map(doc => doc.email);
+
+    // Filter out the unsubscribed users
+    const uniqueEmails = allEmails.filter(email => !blacklistedEmails.includes(email));
+    
     let emailsSent = 0;
 
     for (const email of uniqueEmails) {
