@@ -12,11 +12,12 @@ export default function PushSubscribeButton() {
       if (typeof window !== 'undefined' && window.OneSignal && OneSignal.Notifications) {
         setIsSupported(OneSignal.Notifications.isPushSupported());
         
-        const currentPermission = OneSignal.Notifications.permission;
-        console.log("Current Push Permission Status:", currentPermission);
+        const osPermission = OneSignal.Notifications.permission; // Returns boolean: true/false
+        const nativePermission = window.Notification?.permission; // Returns string: 'granted'/'denied'/'default'
         
-        setIsSubscribed(currentPermission === 'granted');
-        setIsDenied(currentPermission === 'denied');
+        // If EITHER of them say you are subscribed, hide the button!
+        setIsSubscribed(osPermission === true || nativePermission === 'granted');
+        setIsDenied(nativePermission === 'denied');
       }
     };
     
@@ -25,26 +26,18 @@ export default function PushSubscribeButton() {
 
   const handleSubscribe = async () => {
     try {
-      console.log("1. Button tapped!");
+      let finalNativePermission = 'default';
 
-      let finalPermission = 'default';
-
-      // Step A: Force the raw, native browser prompt FIRST (Bypasses React/OneSignal quirks)
       if (typeof window.Notification !== 'undefined') {
-        console.log("2. Firing native browser request...");
-        finalPermission = await window.Notification.requestPermission();
-        console.log("3. Native browser responded with:", finalPermission);
+        finalNativePermission = await window.Notification.requestPermission();
       }
 
-      // Step B: Tell OneSignal to sync up with whatever the user just chose
-      console.log("4. Syncing with OneSignal...");
       await OneSignal.Notifications.requestPermission();
       
-      const newOneSignalPermission = OneSignal.Notifications.permission;
-      console.log("5. Final OneSignal status:", newOneSignalPermission);
+      const newOsPermission = OneSignal.Notifications.permission;
 
-      setIsSubscribed(newOneSignalPermission === 'granted');
-      setIsDenied(newOneSignalPermission === 'denied' || finalPermission === 'denied');
+      setIsSubscribed(newOsPermission === true || finalNativePermission === 'granted');
+      setIsDenied(finalNativePermission === 'denied');
 
     } catch (error) {
       console.error("🚨 Error during subscription process:", error);
@@ -71,7 +64,7 @@ export default function PushSubscribeButton() {
           onClick={handleSubscribe}
           className="bg-barclays-cyan text-barclays-dark font-black uppercase tracking-widest text-xs px-4 py-2 hover:bg-white transition shrink-0 w-full sm:w-auto shadow-sm"
         >
-          Enable reminders 🔔
+          Enable alerts 🔔
         </button>
       )}
     </div>
