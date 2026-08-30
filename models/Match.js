@@ -13,7 +13,9 @@ const MatchSchema = new mongoose.Schema({
   teamALineup: [{ type: String }],
   teamBLineup: [{ type: String }],
   teamABench: [{ type: String }],
-  teamBBench: [{ type: String }]
+  teamBBench: [{ type: String }],
+  pushReminderSent: { type: Boolean, default: false }
+
 });
 
 export default mongoose.models.Match || mongoose.model('Match', MatchSchema);

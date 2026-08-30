@@ -1,0 +1,23 @@
+name: Test
+
+on:
+  pull_request:
+    branches: "**"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v5
+
+      - name: "Setup Bun"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "Install"
+        run: bun i
+
+      - name: "Linting"
+        run: bun run lint
