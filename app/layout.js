@@ -9,6 +9,12 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'Premiership Picks',
   description: 'Select your scorer. Earn points. Win prizes?',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Prem Picks',
+  }
 };
 
 

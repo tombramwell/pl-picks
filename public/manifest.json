@@ -1,0 +1,16 @@
+{
+  "name": "Premiership Picks",
+  "short_name": "Prem Picks",
+  "description": "Select one player per match to score.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00aeef",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
