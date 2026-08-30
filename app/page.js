@@ -7,6 +7,7 @@ import Match from '@/models/Match';
 import Player from '@/models/Player';
 import Pick from '@/models/Pick';
 import MatchRow from '@/components/MatchRow';
+import PushSubscribeButton from '@/components/PushSubscribeButton';
 
 export default async function DashboardPage(props) {
   // 1. Check Authentication
@@ -195,6 +196,8 @@ const playersByTeam = {};
           No Gameweeks Available
         </div>
       )}
+
+      <PushSubscribeButton />
 
       {/* Gameweek Subheader */}
       <div className="bg-white border-l-4 border-barclays-blue p-4 mb-6 shadow-sm flex justify-between items-center">
