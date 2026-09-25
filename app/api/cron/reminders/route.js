@@ -19,7 +19,24 @@ export async function GET(request) {
     await dbConnect();
     const now = new Date();
 
-    // 2. Determine the NEXT active Gameweek
+    // 2. THE FIXTURE CHECK (International Break Logic)
+    // Look ahead 6 days (covers Saturday to Thursday). 
+    // We stop before next Friday so we don't accidentally detect NEXT week's games.
+    const nextThursday = new Date(now.getTime() + (6 * 24 * 60 * 60 * 1000)); 
+
+    const upcomingFixture = await Match.findOne({
+      kickoffTime: { $gte: now,$lte: nextThursday }
+    });
+
+    // If there are no matches in the next 6 days (International break, FA Cup weekend, etc.)
+    if (!upcomingFixture) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'International break! No Premier League fixtures found in the next 6 days. Emails skipped.' 
+      });
+    }
+
+    // 3. Determine the NEXT active Gameweek
     const nextMatch = await Match.findOne({ kickoffTime: { $gt: now } }).sort({ kickoffTime: 1 });
     if (!nextMatch) {
       return NextResponse.json({ message: 'No future matches found. Season over?' });
@@ -31,7 +48,7 @@ export async function GET(request) {
     const gwMatches = await Match.find({ gameweek: targetGw }).lean();
     const matchIds = gwMatches.map(m => m._id.toString());
 
-// 3. Get all active managers (Anyone who has ever made a pick!)
+    // 4. Get all active managers (Anyone who has ever made a pick!)
     const allEmails = await Pick.distinct('userId');
     
     // Grab the blacklist
@@ -53,12 +70,12 @@ export async function GET(request) {
       // Extract just the match IDs they have successfully picked
       const pickedMatchIds = userPicks.map(p => p.matchId.toString());
 
-      // 4. Find the exact matches they are missing
+      // 5. Find the exact matches they are missing
       const missingMatches = gwMatches.filter(
         match => !pickedMatchIds.includes(match._id.toString())
       );
 
-      // 5. If they have missing matches, generate the list and send the email
+      // 6. If they have missing matches, generate the list and send the email
       if (missingMatches.length > 0) {
         
         const missingMatchesHtml = missingMatches.map(m => `
